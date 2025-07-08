@@ -22,6 +22,7 @@ public enum TokenType {
     PAREN_RIGHT,
     ARROW,
 
+    BANG,
     BANG_EQUAL,
     ANGLE_LEFT,
     ANGLE_LEFT_EQUAL,
@@ -37,7 +38,6 @@ public enum TokenType {
     AND,
     BAR_BAR,
     OR,
-    BANG,
     NOT,
 
     DOLLAR,
@@ -49,8 +49,6 @@ public enum TokenType {
     DOT,
 
     IDENTIFIER,
-    TRUE,
-    FALSE,
     BOOLEAN,
     INTEGER,
     FLOAT,
