@@ -54,27 +54,56 @@ public class TokenizerTest {
         }, CURLY_RIGHT
         [, SQUARE_LEFT
         ], SQUARE_RIGHT
+        div, DIV
+        mod, MOD
+        eq, EQ
+        empty, EMPTY
+        ge, GE
+        gt, GT
+        ne, NE
+        le, LE
+        lt, LT
+        and, AND
+        or, OR
+        not, NOT
+        null, NULL
         """)
-    public void testMatchToken_Symbols(String code, TokenType expectedType) {
+    public void testReadSymbols(String code, TokenType expectedType) {
         Tokenizer tokenizer = new Tokenizer(new StringReader(code));
         assertTrue(tokenizer.hasNext());
         checkToken(tokenizer.next(), expectedType, code);
         assertFalse(tokenizer.hasNext());
     }
 
-    // true, BOOLEAN
-    // false, BOOLEAN
+    @Test
+    public void testReadBoolean_True() {
+        Tokenizer tokenizer = new Tokenizer(new StringReader("true"));
+        assertTrue(tokenizer.hasNext());
+        checkToken(tokenizer.next(), TokenType.BOOLEAN, "true", true);
+        assertFalse(tokenizer.hasNext());
+    }
+
+    @Test
+    public void testReadBoolean_False() {
+        Tokenizer tokenizer = new Tokenizer(new StringReader("false"));
+        assertTrue(tokenizer.hasNext());
+        checkToken(tokenizer.next(), TokenType.BOOLEAN, "false", false);
+        assertFalse(tokenizer.hasNext());
+    }
+
     // 123, INTEGER
     // 456.789, FLOAT,
     // \"hello, world\", STRING
-    // @Test
-    // public void testReadBoolean_True() {
-
-    // }
 
     private void checkToken(Token token, TokenType expectedType, String expectedLexeme) {
         assertEquals(expectedType, token.getType());
         assertEquals(expectedLexeme, token.getLexeme());
         assertNull(token.getValue());
+    }
+
+    private void checkToken(Token token, TokenType expectedType, String expectedLexeme, Object expectedValue) {
+        assertEquals(expectedType, token.getType());
+        assertEquals(expectedLexeme, token.getLexeme());
+        assertEquals(expectedValue, token.getValue());
     }
 }

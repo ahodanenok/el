@@ -153,11 +153,14 @@ public class Tokenizer implements Iterator<Token> {
                 case '.' -> createToken(DOT, ".");
                 default -> {
                     if (isDigit((char) ch)) {
+                        reader.unread(ch);
                         yield readNumberToken();
                     } else if (ch == '"') {
+                        reader.unread(ch);
                         yield readStringToken();
                     }
 
+                    reader.unread(ch);
                     String identifier = readIdentifier();
                     if (identifier.equals("true")) {
                         yield createToken(BOOLEAN, identifier, true);
@@ -215,7 +218,37 @@ public class Tokenizer implements Iterator<Token> {
     }
 
     private boolean isDigit(char ch) {
-        return ch >= '0' && ch <= '9';
+        return (ch >= '\u0030' && ch <= '\u0039')
+            || (ch >= '\u0660' && ch <= '\u0669')
+            || (ch >= '\u06f0' && ch <= '\u06f9')
+            || (ch >= '\u0966' && ch <= '\u096f')
+            || (ch >= '\u09e6' && ch <= '\u09ef')
+            || (ch >= '\u0a66' && ch <= '\u0a6f')
+            || (ch >= '\u0ae6' && ch <= '\u0aef')
+            || (ch >= '\u0b66' && ch <= '\u0b6f')
+            || (ch >= '\u0be7' && ch <= '\u0bef')
+            || (ch >= '\u0c66' && ch <= '\u0c6f')
+            || (ch >= '\u0ce6' && ch <= '\u0cef')
+            || (ch >= '\u0d66' && ch <= '\u0d6f')
+            || (ch >= '\u0e50' && ch <= '\u0e59')
+            || (ch >= '\u0ed0' && ch <= '\u0ed9')
+            || (ch >= '\u1040' && ch <= '\u1049');
+    }
+
+    private boolean isLetter(char ch) {
+        return ch == '\u0024'
+            || (ch >= '\u0041' && ch <= '\u005a')
+            || ch == '\u005f'
+            || (ch >= '\u0061' && ch <= '\u007a')
+            || (ch >= '\u00c0' && ch <= '\u00d6')
+            || (ch >= '\u00d8' && ch <= '\u00f6')
+            || (ch >= '\u00f8' && ch <= '\u00ff')
+            || (ch >= '\u0100' && ch <= '\u1fff')
+            || (ch >= '\u3040' && ch <= '\u318f')
+            || (ch >= '\u3300' && ch <= '\u337f')
+            || (ch >= '\u3400' && ch <= '\u3d2d')
+            || (ch >= '\u4e00' && ch <= '\u9fff')
+            || (ch >= '\uf900' && ch <= '\ufaff');
     }
 
     private Token readNumberToken() {
@@ -238,9 +271,25 @@ public class Tokenizer implements Iterator<Token> {
         return createToken(STRING, buf.toString(), buf.substring(1, buf.length() - 1));
     }
 
-    private String readIdentifier() {
+    private String readIdentifier() throws IOException {
         StringBuilder buf = new StringBuilder();
-        // todo: impl
+        int ch = reader.read();
+        if (ch == -1) {
+            throw new IllegalStateException("Expected identifier");
+        }
+
+        if (!isLetter((char) ch)) {
+            throw new IllegalStateException("First character of an identifier must be a letter, got '%c'".formatted(ch));
+        }
+        buf.append((char) ch);
+
+        while ((ch = reader.read()) != -1
+                && (isLetter((char) ch) || isDigit((char) ch))) {
+            buf.append((char) ch);
+        }
+        if (ch != -1) {
+            reader.unread(ch);
+        }
 
         return buf.toString();
     }
