@@ -34,7 +34,7 @@ public class Tokenizer implements Iterator<Token> {
     private final PushbackReader reader;
 
     public Tokenizer(Reader reader) {
-        this.reader = new PushbackReader(reader, 1);
+        this.reader = new PushbackReader(reader, 2);
     }
 
     @Override
@@ -150,11 +150,13 @@ public class Tokenizer implements Iterator<Token> {
                 case '}' -> createToken(CURLY_RIGHT, "}");
                 case '[' -> createToken(SQUARE_LEFT, "[");
                 case ']' -> createToken(SQUARE_RIGHT, "]");
-                case '.' -> createToken(DOT, ".");
                 default -> {
-                    if (isDigit((char) ch)) {
+                    if (isNumberDigit((char) ch)
+                            || (ch == '.' && isNumberDigit((char) peek()))) {
                         reader.unread(ch);
                         yield readNumberToken();
+                    } else if (ch == '.') {
+                        yield createToken(DOT, ".");
                     } else if (ch == '"') {
                         reader.unread(ch);
                         yield readStringToken();
@@ -203,6 +205,16 @@ public class Tokenizer implements Iterator<Token> {
         }
     }
 
+    private int peek() throws IOException {
+        int ch = reader.read();
+        if (ch == -1) {
+            return -1;
+        }
+
+        reader.unread(ch);
+        return ch;
+    }
+
     private boolean match(char expectedChar) throws IOException {
         int ch = reader.read();
         if (ch == -1) {
@@ -217,7 +229,11 @@ public class Tokenizer implements Iterator<Token> {
         return false;
     }
 
-    private boolean isDigit(char ch) {
+    private boolean isNumberDigit(char ch) {
+        return ch >= '\u0030' && ch <= '\u0039';
+    }
+
+    private boolean isIdentifierDigit(char ch) {
         return (ch >= '\u0030' && ch <= '\u0039')
             || (ch >= '\u0660' && ch <= '\u0669')
             || (ch >= '\u06f0' && ch <= '\u06f9')
@@ -251,16 +267,48 @@ public class Tokenizer implements Iterator<Token> {
             || (ch >= '\uf900' && ch <= '\ufaff');
     }
 
-    private Token readNumberToken() {
+    private Token readNumberToken() throws IOException {
         boolean dot = false;
+        boolean exponent = false;
         StringBuilder buf = new StringBuilder();
-        // todo: impl
+        int ch;
+        while ((ch = reader.read()) != -1) {
+            if (isNumberDigit((char) ch)) {
+                buf.append((char) ch);
+            } else if (!dot && ch == '.') {
+                dot = true;
+                buf.append((char) ch);
+            } else if (!exponent && (ch == 'e' || ch == 'E')) {
+                exponent = true;
+                buf.append((char) ch);
+                if (match('+')) {
+                    buf.append('+');
+                } else if (match('-')) {
+                    buf.append('-');
+                }
+            } else {
+                break;
+            }
+        }
+
+        if (buf.isEmpty()) {
+            throw new IllegalStateException("Expected a number");
+        }
 
         String lexeme = buf.toString();
-        if (dot) {
-            return createToken(FLOAT, lexeme, Double.parseDouble(lexeme));
+        if (dot || exponent) {
+            try {
+                return createToken(FLOAT, lexeme, Double.parseDouble(lexeme));
+            } catch (NumberFormatException e) {
+                throw new IllegalStateException("Invalid float literal '%s'".formatted(lexeme));
+            }
         } else {
-            return createToken(INTEGER, lexeme, Integer.parseInt(lexeme));
+            try {
+                return createToken(INTEGER, lexeme, Integer.parseInt(lexeme));
+            } catch (NumberFormatException e) {
+                throw new IllegalStateException(
+                    "Integer literal '%s' is too large".formatted(lexeme));
+            }
         }
     }
 
@@ -284,7 +332,7 @@ public class Tokenizer implements Iterator<Token> {
         buf.append((char) ch);
 
         while ((ch = reader.read()) != -1
-                && (isLetter((char) ch) || isDigit((char) ch))) {
+                && (isLetter((char) ch) || isIdentifierDigit((char) ch))) {
             buf.append((char) ch);
         }
         if (ch != -1) {

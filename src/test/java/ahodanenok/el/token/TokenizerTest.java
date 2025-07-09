@@ -3,6 +3,7 @@ package ahodanenok.el.token;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.StringReader;
@@ -91,8 +92,73 @@ public class TokenizerTest {
         assertFalse(tokenizer.hasNext());
     }
 
-    // 123, INTEGER
-    // 456.789, FLOAT,
+    @ParameterizedTest
+    @CsvSource(textBlock = """
+        0, 0
+        1, 1
+        35, 35
+        123, 123
+        9293, 9293
+        1299522, 1299522
+        2147483647, 2147483647
+        """)
+    public void testReadInteger(String code, int expectedNumber) {
+        Tokenizer tokenizer = new Tokenizer(new StringReader(code));
+        assertTrue(tokenizer.hasNext());
+        checkToken(tokenizer.next(), TokenType.INTEGER, code, expectedNumber);
+        assertFalse(tokenizer.hasNext());
+    }
+
+    @Test
+    public void testReadInteger_TooLarge() {
+        Tokenizer tokenizer = new Tokenizer(new StringReader("2147483648"));
+        assertTrue(tokenizer.hasNext());
+        IllegalStateException ex = assertThrows(
+            IllegalStateException.class, () -> tokenizer.next());
+        assertEquals("Integer literal '2147483648' is too large", ex.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvSource(textBlock = """
+        0.0, 0.0
+        0.0e0, 0.0
+        0.0e+0, 0.0
+        0.0e-0, 0.0
+        1.5, 1.5
+        372.53, 372.53
+        4232.51232321, 4232.51232321
+        123.56e+3, 123560.0
+        123.56e3, 123560.0
+        123.56E+3, 123560.0
+        123.56E3, 123560.0
+        25256.23e-4, 2.525623
+        25256.23E-4, 2.525623
+        .0, 0.0
+        .1, 0.1
+        .94982234, 0.94982234
+        .2326e+5, 23260
+        .2326e5, 23260
+        .2326E+5, 23260
+        .2326E5, 23260
+        .673e-2, 0.00673
+        .673E-2, 0.00673
+        """)
+    public void testReadFloat(String code, double expectedNumber) {
+        Tokenizer tokenizer = new Tokenizer(new StringReader(code));
+        assertTrue(tokenizer.hasNext());
+        checkToken(tokenizer.next(), TokenType.FLOAT, code, expectedNumber);
+        assertFalse(tokenizer.hasNext());
+    }
+
+    @Test
+    public void testReadFloat_InvalidExponent() {
+        Tokenizer tokenizer = new Tokenizer(new StringReader("10.5E"));
+        assertTrue(tokenizer.hasNext());
+        IllegalStateException ex = assertThrows(
+            IllegalStateException.class, () -> tokenizer.next());
+        assertEquals("Invalid float literal '10.5E'", ex.getMessage());
+    }
+
     // \"hello, world\", STRING
 
     private void checkToken(Token token, TokenType expectedType, String expectedLexeme) {
