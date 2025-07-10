@@ -7,10 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.StringReader;
+import java.util.NoSuchElementException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class TokenizerTest {
 
@@ -18,6 +20,9 @@ public class TokenizerTest {
     public void testEmptyString() {
         Tokenizer tokenizer = new Tokenizer(new StringReader(""));
         assertFalse(tokenizer.hasNext());
+        NoSuchElementException ex = assertThrows(
+            NoSuchElementException.class, () -> tokenizer.next());
+        assertEquals("No more tokens", ex.getMessage());
     }
 
     @Test
@@ -159,7 +164,57 @@ public class TokenizerTest {
         assertEquals("Invalid float literal '10.5E'", ex.getMessage());
     }
 
-    // \"hello, world\", STRING
+    @ParameterizedTest
+    @CsvSource(quoteCharacter = '$', textBlock = """
+        '', $$
+        'a', a
+        'test', test
+        $'Hello, World!'$, $Hello, World!$
+        "", $$
+        "a", a
+        "test", test
+        $"Hello, World!"$, $Hello, World!$
+        """)
+    public void testReadString(String code, String expectedString) {
+        Tokenizer tokenizer = new Tokenizer(new StringReader(code));
+        assertTrue(tokenizer.hasNext());
+        checkToken(tokenizer.next(), TokenType.STRING, code, expectedString);
+        assertFalse(tokenizer.hasNext());
+    }
+
+    @ParameterizedTest
+    @CsvSource(quoteCharacter = '$', textBlock = """
+        '\\\\', $'\\'$, $\\$
+        '\\\'', $'\''$, $'$
+        "\\\\", $"\\"$, $\\$
+        "\\\"", $"\""$, $"$
+        """)
+    public void testReadString_Escapes(String code, String expectedLexeme, String expectedString) {
+        Tokenizer tokenizer = new Tokenizer(new StringReader(code));
+        assertTrue(tokenizer.hasNext());
+        checkToken(tokenizer.next(), TokenType.STRING, expectedLexeme, expectedString);
+        assertFalse(tokenizer.hasNext());
+    }
+
+    @ParameterizedTest
+    @CsvSource(quoteCharacter = '$', textBlock = """
+        '\\n', $\\n$
+        '\\"', $\\"$
+        "\\'", $\\'$
+        """)
+    public void testReadString_IllegalEscape(String code, String expectedSequence) {
+        Tokenizer tokenizer = new Tokenizer(new StringReader(code));
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> tokenizer.next());
+        assertEquals("Unsupported escape sequence '%s'".formatted(expectedSequence), ex.getMessage());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "\"abc", "'abc" })
+    public void testReadString_Unclosed(String code) {
+        Tokenizer tokenizer = new Tokenizer(new StringReader(code));
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> tokenizer.next());
+        assertEquals("Unclosed string literal", ex.getMessage());
+    }
 
     private void checkToken(Token token, TokenType expectedType, String expectedLexeme) {
         assertEquals(expectedType, token.getType());

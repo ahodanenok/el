@@ -157,7 +157,7 @@ public class Tokenizer implements Iterator<Token> {
                         yield readNumberToken();
                     } else if (ch == '.') {
                         yield createToken(DOT, ".");
-                    } else if (ch == '"') {
+                    } else if (ch == '"' || ch == '\'') {
                         reader.unread(ch);
                         yield readStringToken();
                     }
@@ -312,9 +312,41 @@ public class Tokenizer implements Iterator<Token> {
         }
     }
 
-    private Token readStringToken() {
+    private Token readStringToken() throws IOException {
         StringBuilder buf = new StringBuilder();
-        // todo: impl
+
+        char quote;
+        if (match('"')) {
+            quote = '"';
+        } else if (match('\'')) {
+            quote = '\'';
+        } else {
+            throw new IllegalStateException("Expected a string");
+        }
+        buf.append(quote);
+
+        int ch, nextCh;
+        while ((ch = reader.read()) != -1 && ch != quote) {
+            if (ch == '\\') {
+                nextCh = peek();
+                if (nextCh == '\\') {
+                    buf.append((char) reader.read());
+                } else if (nextCh == quote) {
+                    buf.append((char) reader.read());
+                } else {
+                    throw new IllegalStateException(
+                        "Unsupported escape sequence '%c%c'".formatted(ch, nextCh));
+                }
+            } else {
+                buf.append((char) ch);
+            }
+        }
+
+        if (ch == quote) {
+            buf.append(quote);
+        } else {
+            throw new IllegalStateException("Unclosed string literal");
+        }
 
         return createToken(STRING, buf.toString(), buf.substring(1, buf.length() - 1));
     }
