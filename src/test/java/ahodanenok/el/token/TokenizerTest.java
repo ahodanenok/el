@@ -106,8 +106,9 @@ public class TokenizerTest {
         9293, 9293
         1299522, 1299522
         2147483647, 2147483647
+        9223372036854775807, 9223372036854775807
         """)
-    public void testReadInteger(String code, int expectedNumber) {
+    public void testReadInteger(String code, long expectedNumber) {
         Tokenizer tokenizer = new Tokenizer(new StringReader(code));
         assertTrue(tokenizer.hasNext());
         checkToken(tokenizer.next(), TokenType.INTEGER, code, expectedNumber);
@@ -116,11 +117,11 @@ public class TokenizerTest {
 
     @Test
     public void testReadInteger_TooLarge() {
-        Tokenizer tokenizer = new Tokenizer(new StringReader("2147483648"));
+        Tokenizer tokenizer = new Tokenizer(new StringReader("9223372036854775808"));
         assertTrue(tokenizer.hasNext());
         IllegalStateException ex = assertThrows(
             IllegalStateException.class, () -> tokenizer.next());
-        assertEquals("Integer literal '2147483648' is too large", ex.getMessage());
+        assertEquals("Integer literal '9223372036854775808' is too large", ex.getMessage());
     }
 
     @ParameterizedTest

@@ -29,4 +29,9 @@ public class Token {
     public <T> T getValue() {
         return (T) value;
     }
+
+    @Override
+    public String toString() {
+        return "Token(type=%s, lexeme=%s)".formatted(type, lexeme);
+    }
 }

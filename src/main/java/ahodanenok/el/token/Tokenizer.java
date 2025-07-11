@@ -32,6 +32,7 @@ public class Tokenizer implements Iterator<Token> {
     }
 
     private final PushbackReader reader;
+    private Token pendingToken;
 
     public Tokenizer(Reader reader) {
         this.reader = new PushbackReader(reader, 2);
@@ -39,6 +40,10 @@ public class Tokenizer implements Iterator<Token> {
 
     @Override
     public boolean hasNext() {
+        if (pendingToken != null) {
+            return true;
+        }
+
         try {
             skipWhitespaces();
 
@@ -55,9 +60,29 @@ public class Tokenizer implements Iterator<Token> {
         }
     }
 
+    public Token peek() {
+        if (pendingToken != null) {
+            return pendingToken;
+        }
+
+        if (!hasNext()) {
+            pendingToken = null;
+            return null;
+        }
+
+        pendingToken = next();
+        return pendingToken;
+    }
+
     @Override
     public Token next() {
         Token token;
+        if (pendingToken != null) {
+            token = pendingToken;
+            pendingToken = null;
+            return token;
+        }
+
         try {
             token = readNext();
         } catch (IOException e) {
@@ -152,7 +177,7 @@ public class Tokenizer implements Iterator<Token> {
                 case ']' -> createToken(SQUARE_RIGHT, "]");
                 default -> {
                     if (isNumberDigit((char) ch)
-                            || (ch == '.' && isNumberDigit((char) peek()))) {
+                            || (ch == '.' && isNumberDigit((char) peekChar()))) {
                         reader.unread(ch);
                         yield readNumberToken();
                     } else if (ch == '.') {
@@ -205,7 +230,7 @@ public class Tokenizer implements Iterator<Token> {
         }
     }
 
-    private int peek() throws IOException {
+    private int peekChar() throws IOException {
         int ch = reader.read();
         if (ch == -1) {
             return -1;
@@ -268,6 +293,8 @@ public class Tokenizer implements Iterator<Token> {
     }
 
     private Token readNumberToken() throws IOException {
+        // todo: negative numbers
+
         boolean dot = false;
         boolean exponent = false;
         StringBuilder buf = new StringBuilder();
@@ -287,6 +314,7 @@ public class Tokenizer implements Iterator<Token> {
                     buf.append('-');
                 }
             } else {
+                reader.unread(ch);
                 break;
             }
         }
@@ -304,7 +332,7 @@ public class Tokenizer implements Iterator<Token> {
             }
         } else {
             try {
-                return createToken(INTEGER, lexeme, Integer.parseInt(lexeme));
+                return createToken(INTEGER, lexeme, Long.parseLong(lexeme));
             } catch (NumberFormatException e) {
                 throw new IllegalStateException(
                     "Integer literal '%s' is too large".formatted(lexeme));
@@ -328,7 +356,7 @@ public class Tokenizer implements Iterator<Token> {
         int ch, nextCh;
         while ((ch = reader.read()) != -1 && ch != quote) {
             if (ch == '\\') {
-                nextCh = peek();
+                nextCh = peekChar();
                 if (nextCh == '\\') {
                     buf.append((char) reader.read());
                 } else if (nextCh == quote) {
