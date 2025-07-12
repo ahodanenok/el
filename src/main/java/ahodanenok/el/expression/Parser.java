@@ -50,11 +50,11 @@ public class Parser {
     public ValueExpressionBase literal() {
         Token token = tokenizer.next();
         return switch (token.getType()) {
-            case BOOLEAN -> new StaticValueExpressionImpl(token.getValue());
-            case STRING -> new StaticValueExpressionImpl(token.getValue());
-            case INTEGER -> new StaticValueExpressionImpl(token.getValue());
-            case FLOAT -> new StaticValueExpressionImpl(token.getValue());
-            case NULL -> new StaticValueExpressionImpl(token.getValue());
+            case BOOLEAN -> new StaticValueExpression(token.getValue());
+            case STRING -> new StaticValueExpression(token.getValue());
+            case INTEGER -> new StaticValueExpression(token.getValue());
+            case FLOAT -> new StaticValueExpression(token.getValue());
+            case NULL -> new StaticValueExpression(token.getValue());
             default -> throw new IllegalStateException("Unexpected token: " + token.getType()); // todo: exception
         };
     }

@@ -27,12 +27,13 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
 
     @Override
     public MethodExpression createMethodExpression(ELContext context, String arg1, Class<?> arg2, Class<?>[] arg3) {
+        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public ValueExpression createValueExpression(Object instance, Class<?> expectedType) {
-        StaticValueExpressionImpl expr = new StaticValueExpressionImpl(instance);
+        StaticValueExpression expr = new StaticValueExpression(instance);
         expr.expectedType = expectedType;
         return expr;
     }

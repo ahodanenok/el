@@ -4,11 +4,11 @@ import java.util.Objects;
 
 import jakarta.el.ELContext;
 
-public class StaticValueExpressionImpl extends ValueExpressionBase {
+public class StaticValueExpression extends ValueExpressionBase {
 
     private final Object value;
 
-    StaticValueExpressionImpl(Object value) {
+    StaticValueExpression(Object value) {
         this.value = value;
     }
 
@@ -24,11 +24,11 @@ public class StaticValueExpressionImpl extends ValueExpressionBase {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null || !(obj instanceof StaticValueExpressionImpl)) {
+        if (obj == null || !(obj instanceof StaticValueExpression)) {
             return false;
         }
 
-        StaticValueExpressionImpl other = (StaticValueExpressionImpl) obj;
+        StaticValueExpression other = (StaticValueExpression) obj;
         return Objects.equals(value, other.value);
     }
 }
