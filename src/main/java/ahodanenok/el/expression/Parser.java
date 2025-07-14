@@ -58,6 +58,8 @@ public class Parser {
     private ValueExpressionBase unary() {
         if (match(TokenType.BANG) || match(TokenType.NOT)) {
             return new NotValueExpression(expression());
+        } else if (match(TokenType.EMPTY)) {
+            return new EmptyValueExpression(expression());
         } else {
             return literal();
         }

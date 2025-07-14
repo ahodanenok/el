@@ -1,8 +1,8 @@
 package ahodanenok.el.expression;
 
-public class ExpressionUtils {
+class ExpressionUtils {
 
-    public static boolean looksLikeDouble(String str) {
+    static boolean looksLikeDouble(String str) {
         char ch;
         for (int i = 0; i < str.length(); i++) {
             ch = str.charAt(i);

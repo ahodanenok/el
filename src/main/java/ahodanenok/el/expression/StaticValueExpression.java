@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import jakarta.el.ELContext;
 
-public class StaticValueExpression extends ValueExpressionBase {
+class StaticValueExpression extends ValueExpressionBase {
 
     final Object value;
 

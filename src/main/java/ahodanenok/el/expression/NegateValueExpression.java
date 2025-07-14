@@ -2,17 +2,18 @@ package ahodanenok.el.expression;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Objects;
 
 import jakarta.el.ELContext;
 import jakarta.el.ELException;
 import jakarta.el.ValueExpression;
 
-public class NegateValueExpression extends ValueExpressionBase {
+class NegateValueExpression extends ValueExpressionBase {
 
     private final ValueExpression expr;
 
-    public NegateValueExpression(ValueExpression expr) {
-        this.expr = expr;
+    NegateValueExpression(ValueExpression expr) {
+        this.expr = Objects.requireNonNull(expr);
     }
 
     @Override

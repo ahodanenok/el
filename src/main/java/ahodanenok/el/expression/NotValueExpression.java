@@ -1,5 +1,7 @@
 package ahodanenok.el.expression;
 
+import java.util.Objects;
+
 import jakarta.el.ELContext;
 import jakarta.el.ValueExpression;
 
@@ -8,7 +10,7 @@ class NotValueExpression extends ValueExpressionBase {
     final ValueExpression expr;
 
     NotValueExpression(ValueExpression expr) {
-        this.expr = expr;
+        this.expr = Objects.requireNonNull(expr);
     }
 
     @Override
