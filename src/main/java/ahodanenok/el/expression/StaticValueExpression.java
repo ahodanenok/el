@@ -6,7 +6,7 @@ import jakarta.el.ELContext;
 
 public class StaticValueExpression extends ValueExpressionBase {
 
-    private final Object value;
+    final Object value;
 
     StaticValueExpression(Object value) {
         this.value = value;

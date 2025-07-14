@@ -7,11 +7,11 @@ import jakarta.el.ELContext;
 import jakarta.el.ELException;
 import jakarta.el.ValueExpression;
 
-public class NumericNegationValueExpression extends ValueExpressionBase {
+public class NegateValueExpression extends ValueExpressionBase {
 
     private final ValueExpression expr;
 
-    public NumericNegationValueExpression(ValueExpression expr) {
+    public NegateValueExpression(ValueExpression expr) {
         this.expr = expr;
     }
 
@@ -55,7 +55,7 @@ public class NumericNegationValueExpression extends ValueExpressionBase {
             return false;
         }
 
-        NumericNegationValueExpression other = (NumericNegationValueExpression) obj;
+        NegateValueExpression other = (NegateValueExpression) obj;
         return other.expr.equals(expr);
     }
 

@@ -43,7 +43,7 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
         Tokenizer tokenizer = new Tokenizer(new StringReader(expression));
         Parser parser = new Parser(tokenizer);
 
-        ValueExpressionBase expr = parser.composite();
+        ValueExpressionBase expr = parser.parseValue();
         expr.expressionString = expression;
         expr.expectedType = expectedType;
 

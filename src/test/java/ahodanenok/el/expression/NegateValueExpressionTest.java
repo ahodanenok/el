@@ -12,14 +12,14 @@ import jakarta.el.ELException;
 import jakarta.el.ExpressionFactory;
 import jakarta.el.StandardELContext;
 
-public class NumericNegationValueExpressionTest {
+public class NegateValueExpressionTest {
 
     @Test
     public void testNegate_Null() {
         ExpressionFactory ef = ExpressionFactoryStubs.NONE;
         StandardELContext context = new StandardELContext(ef);
         context.putContext(ExpressionFactory.class, ef);
-        var expr = new NumericNegationValueExpression(new StaticValueExpression(null));
+        var expr = new NegateValueExpression(new StaticValueExpression(null));
         assertEquals(Long.valueOf(0), expr.getValue(context));
     }
 
@@ -28,7 +28,7 @@ public class NumericNegationValueExpressionTest {
         ExpressionFactory ef = ExpressionFactoryStubs.NONE;
         StandardELContext context = new StandardELContext(ef);
         context.putContext(ExpressionFactory.class, ef);
-        var expr = new NumericNegationValueExpression(new StaticValueExpression(BigDecimal.valueOf(123.45)));
+        var expr = new NegateValueExpression(new StaticValueExpression(BigDecimal.valueOf(123.45)));
         assertEquals(BigDecimal.valueOf(-123.45), expr.getValue(context));
     }
 
@@ -37,7 +37,7 @@ public class NumericNegationValueExpressionTest {
         ExpressionFactory ef = ExpressionFactoryStubs.NONE;
         StandardELContext context = new StandardELContext(ef);
         context.putContext(ExpressionFactory.class, ef);
-        var expr = new NumericNegationValueExpression(new StaticValueExpression(BigInteger.valueOf(100)));
+        var expr = new NegateValueExpression(new StaticValueExpression(BigInteger.valueOf(100)));
         assertEquals(BigInteger.valueOf(-100), expr.getValue(context));
     }
 
@@ -46,7 +46,7 @@ public class NumericNegationValueExpressionTest {
         ExpressionFactory ef = ExpressionFactoryStubs.coerceToValue(Double.valueOf(1.5), Double.class);
         StandardELContext context = new StandardELContext(ef);
         context.putContext(ExpressionFactory.class, ef);
-        var expr = new NumericNegationValueExpression(new StaticValueExpression("1.5"));
+        var expr = new NegateValueExpression(new StaticValueExpression("1.5"));
         assertEquals(Double.valueOf(-1.5), expr.getValue(context));
     }
 
@@ -55,7 +55,7 @@ public class NumericNegationValueExpressionTest {
         ExpressionFactory ef = ExpressionFactoryStubs.coerceToValue(Long.valueOf(10), Long.class);
         StandardELContext context = new StandardELContext(ef);
         context.putContext(ExpressionFactory.class, ef);
-        var expr = new NumericNegationValueExpression(new StaticValueExpression("10"));
+        var expr = new NegateValueExpression(new StaticValueExpression("10"));
         assertEquals(Long.valueOf(-10), expr.getValue(context));
     }
 
@@ -64,7 +64,7 @@ public class NumericNegationValueExpressionTest {
         ExpressionFactory ef = ExpressionFactoryStubs.NONE;
         StandardELContext context = new StandardELContext(ef);
         context.putContext(ExpressionFactory.class, ef);
-        var expr = new NumericNegationValueExpression(new StaticValueExpression(Byte.valueOf((byte) 1)));
+        var expr = new NegateValueExpression(new StaticValueExpression(Byte.valueOf((byte) 1)));
         assertEquals(Byte.valueOf((byte) -1), expr.getValue(context));
     }
 
@@ -73,7 +73,7 @@ public class NumericNegationValueExpressionTest {
         ExpressionFactory ef = ExpressionFactoryStubs.NONE;
         StandardELContext context = new StandardELContext(ef);
         context.putContext(ExpressionFactory.class, ef);
-        var expr = new NumericNegationValueExpression(new StaticValueExpression(Short.valueOf((short) 1)));
+        var expr = new NegateValueExpression(new StaticValueExpression(Short.valueOf((short) 1)));
         assertEquals(Short.valueOf((short) -1), expr.getValue(context));
     }
 
@@ -82,7 +82,7 @@ public class NumericNegationValueExpressionTest {
         ExpressionFactory ef = ExpressionFactoryStubs.NONE;
         StandardELContext context = new StandardELContext(ef);
         context.putContext(ExpressionFactory.class, ef);
-        var expr = new NumericNegationValueExpression(new StaticValueExpression(Integer.valueOf(1)));
+        var expr = new NegateValueExpression(new StaticValueExpression(Integer.valueOf(1)));
         assertEquals(Integer.valueOf(-1), expr.getValue(context));
     }
 
@@ -91,7 +91,7 @@ public class NumericNegationValueExpressionTest {
         ExpressionFactory ef = ExpressionFactoryStubs.NONE;
         StandardELContext context = new StandardELContext(ef);
         context.putContext(ExpressionFactory.class, ef);
-        var expr = new NumericNegationValueExpression(new StaticValueExpression(Long.valueOf(1)));
+        var expr = new NegateValueExpression(new StaticValueExpression(Long.valueOf(1)));
         assertEquals(Long.valueOf(-1), expr.getValue(context));
     }
 
@@ -100,7 +100,7 @@ public class NumericNegationValueExpressionTest {
         ExpressionFactory ef = ExpressionFactoryStubs.NONE;
         StandardELContext context = new StandardELContext(ef);
         context.putContext(ExpressionFactory.class, ef);
-        var expr = new NumericNegationValueExpression(new StaticValueExpression(Float.valueOf(1)));
+        var expr = new NegateValueExpression(new StaticValueExpression(Float.valueOf(1)));
         assertEquals(Float.valueOf(-1), expr.getValue(context));
     }
 
@@ -109,7 +109,7 @@ public class NumericNegationValueExpressionTest {
         ExpressionFactory ef = ExpressionFactoryStubs.NONE;
         StandardELContext context = new StandardELContext(ef);
         context.putContext(ExpressionFactory.class, ef);
-        var expr = new NumericNegationValueExpression(new StaticValueExpression(Double.valueOf(1)));
+        var expr = new NegateValueExpression(new StaticValueExpression(Double.valueOf(1)));
         assertEquals(Double.valueOf(-1), expr.getValue(context));
     }
 
@@ -118,7 +118,7 @@ public class NumericNegationValueExpressionTest {
         ExpressionFactory ef = ExpressionFactoryStubs.NONE;
         StandardELContext context = new StandardELContext(ef);
         context.putContext(ExpressionFactory.class, ef);
-        var expr = new NumericNegationValueExpression(new StaticValueExpression(true));
+        var expr = new NegateValueExpression(new StaticValueExpression(true));
         ELException ex = assertThrows(ELException.class, () -> expr.getValue(context));
         assertEquals("Numeric negation is not defined for type 'java.lang.Boolean'", ex.getMessage());
     }

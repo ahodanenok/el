@@ -15,7 +15,11 @@ public class Parser {
         this.tokenizer = tokenizer;
     }
 
-    public ValueExpressionBase composite() {
+    public ValueExpressionBase parseValue() {
+        return composite();
+    }
+
+    private ValueExpressionBase composite() {
         if (!tokenizer.hasNext()) {
             return null;
         }
@@ -31,23 +35,35 @@ public class Parser {
         };
     }
 
-    public ValueExpressionBase dollarValue() {
+    private ValueExpressionBase dollarValue() {
         expect(TokenType.DOLLAR);
         expect(TokenType.CURLY_LEFT);
-        ValueExpressionBase expr = literal();
+        ValueExpressionBase expr = expression();
         expect(TokenType.CURLY_RIGHT);
         return expr;
     }
 
-    public ValueExpressionBase hashValue() {
+    private ValueExpressionBase hashValue() {
         expect(TokenType.HASH);
         expect(TokenType.CURLY_LEFT);
-        ValueExpressionBase expr = literal();
+        ValueExpressionBase expr = expression();
         expect(TokenType.CURLY_RIGHT);
         return expr;
     }
 
-    public ValueExpressionBase literal() {
+    private ValueExpressionBase expression() {
+        return unary();
+    }
+
+    private ValueExpressionBase unary() {
+        if (match(TokenType.BANG) || match(TokenType.NOT)) {
+            return new NotValueExpression(expression());
+        } else {
+            return literal();
+        }
+    }
+
+    private ValueExpressionBase literal() {
         Token token = tokenizer.next();
         return switch (token.getType()) {
             case BOOLEAN -> new StaticValueExpression(token.getValue());
