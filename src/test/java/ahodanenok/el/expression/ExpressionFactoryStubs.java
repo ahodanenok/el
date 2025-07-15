@@ -1,6 +1,9 @@
 package ahodanenok.el.expression;
 
+import java.util.Objects;
+
 import jakarta.el.ELContext;
+import jakarta.el.ELException;
 import jakarta.el.ExpressionFactory;
 import jakarta.el.MethodExpression;
 import jakarta.el.ValueExpression;
@@ -18,6 +21,32 @@ class ExpressionFactoryStubs {
                 } else {
                     throw new IllegalArgumentException("Unexpected target class: " + targetClass);
                 }
+            }
+        };
+    }
+
+    static ExpressionFactory coerceToValue(ConversionRule... rules) {
+        return new EmptyExpressionFactory() {
+            @Override
+            public <T> T coerceToType(Object value, Class<T> targetClass) {
+                for (ConversionRule rule : rules) {
+                    if (Objects.equals(value, rule.expectedValue)
+                            && Objects.equals(targetClass, rule.targetClass)) {
+                        return (T) rule.targetValue;
+                    }
+                }
+
+                throw new IllegalArgumentException(
+                    "Unexpected conversion of value '%s' to '%s'".formatted(value, targetClass));
+            }
+        };
+    }
+
+    static ExpressionFactory elException(String msg) {
+        return new EmptyExpressionFactory() {
+            @Override
+            public <T> T coerceToType(Object value, Class<T> targetClass) {
+                throw new ELException(msg);
             }
         };
     }
@@ -42,6 +71,19 @@ class ExpressionFactoryStubs {
         @Override
         public ValueExpression createValueExpression(ELContext context, String expr, Class<?> expectedType) {
             throw new IllegalStateException("Not expected");
+        }
+    }
+
+    static final class ConversionRule {
+
+        private final Object expectedValue;
+        private final Object targetValue;
+        private final Class<?> targetClass;
+
+        ConversionRule(Object expectedValue, Object targetValue, Class<?> targetClass) {
+            this.expectedValue = expectedValue;
+            this.targetValue = targetValue;
+            this.targetClass = targetClass;
         }
     }
 }
