@@ -29,13 +29,13 @@ public class Parser {
 
         Token token = tokenizer.peek();
         return switch (token.getType()) {
-            case DOLLAR -> dollarValue();
-            case HASH -> hashValue();
+            case DOLLAR -> dollarExpression();
+            case HASH -> hashExpression();
             default -> literal();
         };
     }
 
-    private ValueExpressionBase dollarValue() {
+    private ValueExpressionBase dollarExpression() {
         expect(TokenType.DOLLAR);
         expect(TokenType.CURLY_LEFT);
         ValueExpressionBase expr = expression();
@@ -43,7 +43,7 @@ public class Parser {
         return expr;
     }
 
-    private ValueExpressionBase hashValue() {
+    private ValueExpressionBase hashExpression() {
         expect(TokenType.HASH);
         expect(TokenType.CURLY_LEFT);
         ValueExpressionBase expr = expression();
@@ -52,12 +52,46 @@ public class Parser {
     }
 
     private ValueExpressionBase expression() {
-        return unary();
+        return add();
+    }
+
+    private ValueExpressionBase add() {
+        ValueExpressionBase expr = multiply();
+        while (true) {
+            if (match(TokenType.PLUS)) {
+                expr = new AddValueExpression(expr, multiply());
+            } else if (match(TokenType.MINUS)) {
+                expr = new SubtractValueExpression(expr, multiply());
+            } else {
+                break;
+            }
+        }
+
+        return expr;
+    }
+
+    private ValueExpressionBase multiply() {
+        ValueExpressionBase expr = unary();
+        while (true) {
+            if (match(TokenType.STAR)) {
+                expr = new MultiplyValueExpression(expr, unary());
+            } else if (match(TokenType.SLASH) || match(TokenType.DIV)) {
+                expr = new DivideValueExpression(expr, unary());
+            } else if (match(TokenType.PERCENT) || match(TokenType.MOD)) {
+                expr = new ModuloValueExpression(expr, unary());
+            } else {
+                break;
+            }
+        }
+
+        return expr;
     }
 
     private ValueExpressionBase unary() {
         if (match(TokenType.BANG) || match(TokenType.NOT)) {
             return new NotValueExpression(expression());
+        } else if (match(TokenType.MINUS)) {
+            return new NegateValueExpression(expression());
         } else if (match(TokenType.EMPTY)) {
             return new EmptyValueExpression(expression());
         } else {

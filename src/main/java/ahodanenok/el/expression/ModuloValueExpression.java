@@ -10,8 +10,8 @@ import jakarta.el.ValueExpression;
 
 class ModuloValueExpression extends ValueExpressionBase {
 
-    private final ValueExpression left;
-    private final ValueExpression right;
+    final ValueExpression left;
+    final ValueExpression right;
 
     ModuloValueExpression(ValueExpression left, ValueExpression right) {
         this.left = Objects.requireNonNull(left);

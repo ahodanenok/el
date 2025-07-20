@@ -10,8 +10,8 @@ import jakarta.el.ValueExpression;
 
 class AddValueExpression extends ValueExpressionBase {
 
-    private final ValueExpression left;
-    private final ValueExpression right;
+    final ValueExpression left;
+    final ValueExpression right;
 
     AddValueExpression(ValueExpression left, ValueExpression right) {
         this.left = Objects.requireNonNull(left);

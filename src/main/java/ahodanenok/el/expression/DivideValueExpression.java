@@ -11,8 +11,8 @@ import jakarta.el.ValueExpression;
 
 class DivideValueExpression extends ValueExpressionBase {
 
-    private final ValueExpression left;
-    private final ValueExpression right;
+    final ValueExpression left;
+    final ValueExpression right;
 
     DivideValueExpression(ValueExpression left, ValueExpression right) {
         this.left = Objects.requireNonNull(left);

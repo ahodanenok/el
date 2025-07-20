@@ -10,7 +10,7 @@ import jakarta.el.ValueExpression;
 
 class NegateValueExpression extends ValueExpressionBase {
 
-    private final ValueExpression expr;
+    final ValueExpression expr;
 
     NegateValueExpression(ValueExpression expr) {
         this.expr = Objects.requireNonNull(expr);
