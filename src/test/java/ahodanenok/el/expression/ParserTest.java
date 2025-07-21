@@ -221,10 +221,10 @@ public class ParserTest {
     })
     public void testParse_Add(String code) {
         Parser parser = new Parser(new Tokenizer(new StringReader(code)));
-        AddValueExpression div = assertInstanceOf(AddValueExpression.class, parser.parseValue());
-        StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, div.left);
+        AddValueExpression add = assertInstanceOf(AddValueExpression.class, parser.parseValue());
+        StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, add.left);
         assertEquals(1L, left.value);
-        StaticValueExpression right = assertInstanceOf(StaticValueExpression.class, div.right);
+        StaticValueExpression right = assertInstanceOf(StaticValueExpression.class, add.right);
         assertEquals(2L, right.value);
     }
 
@@ -236,18 +236,18 @@ public class ParserTest {
     public void testParse_Add_Chain(String code) {
         Parser parser = new Parser(new Tokenizer(new StringReader(code)));
 
-        AddValueExpression mul1 = assertInstanceOf(AddValueExpression.class, parser.parseValue());
-        StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, mul1.right);
+        AddValueExpression add1 = assertInstanceOf(AddValueExpression.class, parser.parseValue());
+        StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, add1.right);
         assertEquals(4L, right1.value);
 
-        AddValueExpression mul2 = assertInstanceOf(AddValueExpression.class, mul1.left);
-        StaticValueExpression right2 = assertInstanceOf(StaticValueExpression.class, mul2.right);
+        AddValueExpression add2 = assertInstanceOf(AddValueExpression.class, add1.left);
+        StaticValueExpression right2 = assertInstanceOf(StaticValueExpression.class, add2.right);
         assertEquals(3L, right2.value);
 
-        AddValueExpression mul3 = assertInstanceOf(AddValueExpression.class, mul2.left);
-        StaticValueExpression left3 = assertInstanceOf(StaticValueExpression.class, mul3.left);
+        AddValueExpression add3 = assertInstanceOf(AddValueExpression.class, add2.left);
+        StaticValueExpression left3 = assertInstanceOf(StaticValueExpression.class, add3.left);
         assertEquals(1L, left3.value);
-        StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, mul3.right);
+        StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, add3.right);
         assertEquals(2L, right3.value);
     }
 
@@ -258,10 +258,10 @@ public class ParserTest {
     })
     public void testParse_Subtract(String code) {
         Parser parser = new Parser(new Tokenizer(new StringReader(code)));
-        SubtractValueExpression div = assertInstanceOf(SubtractValueExpression.class, parser.parseValue());
-        StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, div.left);
+        SubtractValueExpression sub = assertInstanceOf(SubtractValueExpression.class, parser.parseValue());
+        StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, sub.left);
         assertEquals(1L, left.value);
-        StaticValueExpression right = assertInstanceOf(StaticValueExpression.class, div.right);
+        StaticValueExpression right = assertInstanceOf(StaticValueExpression.class, sub.right);
         assertEquals(2L, right.value);
     }
 
@@ -273,18 +273,55 @@ public class ParserTest {
     public void testParse_Subtract_Chain(String code) {
         Parser parser = new Parser(new Tokenizer(new StringReader(code)));
 
-        SubtractValueExpression mul1 = assertInstanceOf(SubtractValueExpression.class, parser.parseValue());
-        StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, mul1.right);
+        SubtractValueExpression sub1 = assertInstanceOf(SubtractValueExpression.class, parser.parseValue());
+        StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, sub1.right);
         assertEquals(4L, right1.value);
 
-        SubtractValueExpression mul2 = assertInstanceOf(SubtractValueExpression.class, mul1.left);
-        StaticValueExpression right2 = assertInstanceOf(StaticValueExpression.class, mul2.right);
+        SubtractValueExpression sub2 = assertInstanceOf(SubtractValueExpression.class, sub1.left);
+        StaticValueExpression right2 = assertInstanceOf(StaticValueExpression.class, sub2.right);
         assertEquals(3L, right2.value);
 
-        SubtractValueExpression mul3 = assertInstanceOf(SubtractValueExpression.class, mul2.left);
-        StaticValueExpression left3 = assertInstanceOf(StaticValueExpression.class, mul3.left);
+        SubtractValueExpression sub3 = assertInstanceOf(SubtractValueExpression.class, sub2.left);
+        StaticValueExpression left3 = assertInstanceOf(StaticValueExpression.class, sub3.left);
         assertEquals(1L, left3.value);
-        StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, mul3.right);
+        StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, sub3.right);
+        assertEquals(2L, right3.value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 += 2}",
+        "#{1 += 2}",
+    })
+    public void testParse_Concatenate(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        ConcatenateValueExpression div = assertInstanceOf(ConcatenateValueExpression.class, parser.parseValue());
+        StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, div.left);
+        assertEquals(1L, left.value);
+        StaticValueExpression right = assertInstanceOf(StaticValueExpression.class, div.right);
+        assertEquals(2L, right.value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 += 2 += 3 += 4}",
+        "#{1 += 2 += 3 += 4}",
+    })
+    public void testParse_Concatenate_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+
+        ConcatenateValueExpression concat1 = assertInstanceOf(ConcatenateValueExpression.class, parser.parseValue());
+        StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, concat1.right);
+        assertEquals(4L, right1.value);
+
+        ConcatenateValueExpression concat2 = assertInstanceOf(ConcatenateValueExpression.class, concat1.left);
+        StaticValueExpression right2 = assertInstanceOf(StaticValueExpression.class, concat2.right);
+        assertEquals(3L, right2.value);
+
+        ConcatenateValueExpression concat3 = assertInstanceOf(ConcatenateValueExpression.class, concat2.left);
+        StaticValueExpression left3 = assertInstanceOf(StaticValueExpression.class, concat3.left);
+        assertEquals(1L, left3.value);
+        StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, concat3.right);
         assertEquals(2L, right3.value);
     }
 }

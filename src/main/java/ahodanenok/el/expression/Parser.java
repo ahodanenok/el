@@ -52,7 +52,16 @@ public class Parser {
     }
 
     private ValueExpressionBase expression() {
-        return add();
+        return concatenate();
+    }
+
+    private ValueExpressionBase concatenate() {
+        ValueExpressionBase expr = add();
+        while (match(TokenType.PLUS_EQUAL)) {
+            expr = new ConcatenateValueExpression(expr, add());
+        }
+
+        return expr;
     }
 
     private ValueExpressionBase add() {
