@@ -324,4 +324,45 @@ public class ParserTest {
         StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, concat3.right);
         assertEquals(2L, right3.value);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 < 2}",
+        "${1 lt 2}",
+        "#{1 < 2}",
+        "#{1 lt 2}",
+    })
+    public void testParse_LessThan(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        LessThanValueExpression lt = assertInstanceOf(LessThanValueExpression.class, parser.parseValue());
+        StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, lt.left);
+        assertEquals(1L, left.value);
+        StaticValueExpression right = assertInstanceOf(StaticValueExpression.class, lt.right);
+        assertEquals(2L, right.value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 < 2 < 3 < 4}",
+        "${1 lt 2 lt 3 lt 4}",
+        "#{1 < 2 < 3 < 4}",
+        "#{1 lt 2 lt 3 lt 4}",
+    })
+    public void testParse_LessThan_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+
+        LessThanValueExpression lt1 = assertInstanceOf(LessThanValueExpression.class, parser.parseValue());
+        StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, lt1.right);
+        assertEquals(4L, right1.value);
+
+        LessThanValueExpression lt2 = assertInstanceOf(LessThanValueExpression.class, lt1.left);
+        StaticValueExpression right2 = assertInstanceOf(StaticValueExpression.class, lt2.right);
+        assertEquals(3L, right2.value);
+
+        LessThanValueExpression lt3 = assertInstanceOf(LessThanValueExpression.class, lt2.left);
+        StaticValueExpression left3 = assertInstanceOf(StaticValueExpression.class, lt3.left);
+        assertEquals(1L, left3.value);
+        StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, lt3.right);
+        assertEquals(2L, right3.value);
+    }
 }

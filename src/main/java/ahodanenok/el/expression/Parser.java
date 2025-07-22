@@ -52,7 +52,20 @@ public class Parser {
     }
 
     private ValueExpressionBase expression() {
-        return concatenate();
+        return less();
+    }
+
+    private ValueExpressionBase less() {
+        ValueExpressionBase expr = concatenate();
+        while (true) {
+            if (match(TokenType.ANGLE_LEFT) || match(TokenType.LT)) {
+                expr = new LessThanValueExpression(expr, concatenate());
+            } else {
+                break;
+            }
+        }
+
+        return expr;
     }
 
     private ValueExpressionBase concatenate() {
