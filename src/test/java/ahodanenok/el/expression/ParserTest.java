@@ -365,4 +365,45 @@ public class ParserTest {
         StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, lt3.right);
         assertEquals(2L, right3.value);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 > 2}",
+        "${1 gt 2}",
+        "#{1 > 2}",
+        "#{1 gt 2}",
+    })
+    public void testParse_GreaterThan(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        GreaterThanValueExpression gt = assertInstanceOf(GreaterThanValueExpression.class, parser.parseValue());
+        StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, gt.left);
+        assertEquals(1L, left.value);
+        StaticValueExpression right = assertInstanceOf(StaticValueExpression.class, gt.right);
+        assertEquals(2L, right.value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 > 2 > 3 > 4}",
+        "${1 gt 2 gt 3 gt 4}",
+        "#{1 > 2 > 3 > 4}",
+        "#{1 gt 2 gt 3 gt 4}"
+    })
+    public void testParse_GreaterThan_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+
+        GreaterThanValueExpression gt1 = assertInstanceOf(GreaterThanValueExpression.class, parser.parseValue());
+        StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, gt1.right);
+        assertEquals(4L, right1.value);
+
+        GreaterThanValueExpression gt2 = assertInstanceOf(GreaterThanValueExpression.class, gt1.left);
+        StaticValueExpression right2 = assertInstanceOf(StaticValueExpression.class, gt2.right);
+        assertEquals(3L, right2.value);
+
+        GreaterThanValueExpression gt3 = assertInstanceOf(GreaterThanValueExpression.class, gt2.left);
+        StaticValueExpression left3 = assertInstanceOf(StaticValueExpression.class, gt3.left);
+        assertEquals(1L, left3.value);
+        StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, gt3.right);
+        assertEquals(2L, right3.value);
+    }
 }
