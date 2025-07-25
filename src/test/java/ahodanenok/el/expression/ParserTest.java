@@ -368,6 +368,47 @@ public class ParserTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
+        "${1 <= 2}",
+        "${1 le 2}",
+        "#{1 <= 2}",
+        "#{1 le 2}"
+    })
+    public void testParse_LessEqual(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        LessEqualValueExpression lt = assertInstanceOf(LessEqualValueExpression.class, parser.parseValue());
+        StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, lt.left);
+        assertEquals(1L, left.value);
+        StaticValueExpression right = assertInstanceOf(StaticValueExpression.class, lt.right);
+        assertEquals(2L, right.value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 <= 2 <= 3 <= 4}",
+        "${1 le 2 le 3 le 4}",
+        "#{1 <= 2 <= 3 <= 4}",
+        "#{1 le 2 le 3 le 4}"
+    })
+    public void testParse_LessEqual_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+
+        LessEqualValueExpression le1 = assertInstanceOf(LessEqualValueExpression.class, parser.parseValue());
+        StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, le1.right);
+        assertEquals(4L, right1.value);
+
+        LessEqualValueExpression le2 = assertInstanceOf(LessEqualValueExpression.class, le1.left);
+        StaticValueExpression right2 = assertInstanceOf(StaticValueExpression.class, le2.right);
+        assertEquals(3L, right2.value);
+
+        LessEqualValueExpression le3 = assertInstanceOf(LessEqualValueExpression.class, le2.left);
+        StaticValueExpression left3 = assertInstanceOf(StaticValueExpression.class, le3.left);
+        assertEquals(1L, left3.value);
+        StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, le3.right);
+        assertEquals(2L, right3.value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
         "${1 > 2}",
         "${1 gt 2}",
         "#{1 > 2}",

@@ -60,6 +60,8 @@ public class Parser {
         while (true) {
             if (match(TokenType.ANGLE_LEFT) || match(TokenType.LT)) {
                 expr = new LessThanValueExpression(expr, concatenate());
+            } else if (match(TokenType.ANGLE_LEFT_EQUAL) || match(TokenType.LE)) {
+                expr = new LessEqualValueExpression(expr, concatenate());
             } else if (match(TokenType.ANGLE_RIGHT) || match(TokenType.GT)) {
                 expr = new GreaterThanValueExpression(expr, concatenate());
             } else {
