@@ -447,4 +447,45 @@ public class ParserTest {
         StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, gt3.right);
         assertEquals(2L, right3.value);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 >= 2}",
+        "${1 ge 2}",
+        "#{1 >= 2}",
+        "#{1 ge 2}",
+    })
+    public void testParse_GreaterEqual(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        GreaterEqualValueExpression ge = assertInstanceOf(GreaterEqualValueExpression.class, parser.parseValue());
+        StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, ge.left);
+        assertEquals(1L, left.value);
+        StaticValueExpression right = assertInstanceOf(StaticValueExpression.class, ge.right);
+        assertEquals(2L, right.value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 >= 2 >= 3 >= 4}",
+        "${1 ge 2 ge 3 ge 4}",
+        "#{1 >= 2 >= 3 >= 4}",
+        "#{1 ge 2 ge 3 ge 4}"
+    })
+    public void testParse_GreaterEqual_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+
+        GreaterEqualValueExpression ge1 = assertInstanceOf(GreaterEqualValueExpression.class, parser.parseValue());
+        StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, ge1.right);
+        assertEquals(4L, right1.value);
+
+        GreaterEqualValueExpression ge2 = assertInstanceOf(GreaterEqualValueExpression.class, ge1.left);
+        StaticValueExpression right2 = assertInstanceOf(StaticValueExpression.class, ge2.right);
+        assertEquals(3L, right2.value);
+
+        GreaterEqualValueExpression ge3 = assertInstanceOf(GreaterEqualValueExpression.class, ge2.left);
+        StaticValueExpression left3 = assertInstanceOf(StaticValueExpression.class, ge3.left);
+        assertEquals(1L, left3.value);
+        StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, ge3.right);
+        assertEquals(2L, right3.value);
+    }
 }

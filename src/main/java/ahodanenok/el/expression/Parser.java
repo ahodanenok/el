@@ -64,6 +64,8 @@ public class Parser {
                 expr = new LessEqualValueExpression(expr, concatenate());
             } else if (match(TokenType.ANGLE_RIGHT) || match(TokenType.GT)) {
                 expr = new GreaterThanValueExpression(expr, concatenate());
+            } else if (match(TokenType.ANGLE_RIGHT_EQUAL) || match(TokenType.GE)) {
+                expr = new GreaterEqualValueExpression(expr, concatenate());
             } else {
                 break;
             }
