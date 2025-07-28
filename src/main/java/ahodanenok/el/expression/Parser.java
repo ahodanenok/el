@@ -52,10 +52,23 @@ public class Parser {
     }
 
     private ValueExpressionBase expression() {
-        return less();
+        return equal();
     }
 
-    private ValueExpressionBase less() {
+    private ValueExpressionBase equal() {
+        ValueExpressionBase expr = compare();
+        while (true) {
+            if (match(TokenType.EQUAL_EQUAL) || match(TokenType.EQ)) {
+                expr = new EqualValueExpression(expr, compare());
+            } else {
+                break;
+            }
+        }
+
+        return expr;
+    }
+
+    private ValueExpressionBase compare() {
         ValueExpressionBase expr = concatenate();
         while (true) {
             if (match(TokenType.ANGLE_LEFT) || match(TokenType.LT)) {

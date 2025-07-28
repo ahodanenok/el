@@ -488,4 +488,45 @@ public class ParserTest {
         StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, ge3.right);
         assertEquals(2L, right3.value);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 == 2}",
+        "${1 eq 2}",
+        "#{1 == 2}",
+        "#{1 eq 2}",
+    })
+    public void testParse_Equal(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        EqualValueExpression eq = assertInstanceOf(EqualValueExpression.class, parser.parseValue());
+        StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, eq.left);
+        assertEquals(1L, left.value);
+        StaticValueExpression right = assertInstanceOf(StaticValueExpression.class, eq.right);
+        assertEquals(2L, right.value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 == 2 == 3 == 4}",
+        "${1 eq 2 eq 3 eq 4}",
+        "#{1 == 2 == 3 == 4}",
+        "#{1 eq 2 eq 3 eq 4}"
+    })
+    public void testParse_Equal_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+
+        EqualValueExpression eq1 = assertInstanceOf(EqualValueExpression.class, parser.parseValue());
+        StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, eq1.right);
+        assertEquals(4L, right1.value);
+
+        EqualValueExpression eq2 = assertInstanceOf(EqualValueExpression.class, eq1.left);
+        StaticValueExpression right2 = assertInstanceOf(StaticValueExpression.class, eq2.right);
+        assertEquals(3L, right2.value);
+
+        EqualValueExpression eq3 = assertInstanceOf(EqualValueExpression.class, eq2.left);
+        StaticValueExpression left3 = assertInstanceOf(StaticValueExpression.class, eq3.left);
+        assertEquals(1L, left3.value);
+        StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, eq3.right);
+        assertEquals(2L, right3.value);
+    }
 }
