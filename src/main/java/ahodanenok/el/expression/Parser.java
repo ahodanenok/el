@@ -60,6 +60,8 @@ public class Parser {
         while (true) {
             if (match(TokenType.EQUAL_EQUAL) || match(TokenType.EQ)) {
                 expr = new EqualValueExpression(expr, compare());
+            } else if (match(TokenType.BANG_EQUAL) || match(TokenType.NE)) {
+                expr = new NotEqualValueExpression(expr, compare());
             } else {
                 break;
             }

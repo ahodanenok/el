@@ -529,4 +529,45 @@ public class ParserTest {
         StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, eq3.right);
         assertEquals(2L, right3.value);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 != 2}",
+        "${1 ne 2}",
+        "#{1 != 2}",
+        "#{1 ne 2}",
+    })
+    public void testParse_NotEqual(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        NotEqualValueExpression eq = assertInstanceOf(NotEqualValueExpression.class, parser.parseValue());
+        StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, eq.left);
+        assertEquals(1L, left.value);
+        StaticValueExpression right = assertInstanceOf(StaticValueExpression.class, eq.right);
+        assertEquals(2L, right.value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 != 2 != 3 != 4}",
+        "${1 ne 2 ne 3 ne 4}",
+        "#{1 != 2 != 3 != 4}",
+        "#{1 ne 2 ne 3 ne 4}"
+    })
+    public void testParse_NotEqual_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+
+        NotEqualValueExpression ne1 = assertInstanceOf(NotEqualValueExpression.class, parser.parseValue());
+        StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, ne1.right);
+        assertEquals(4L, right1.value);
+
+        NotEqualValueExpression ne2 = assertInstanceOf(NotEqualValueExpression.class, ne1.left);
+        StaticValueExpression right2 = assertInstanceOf(StaticValueExpression.class, ne2.right);
+        assertEquals(3L, right2.value);
+
+        NotEqualValueExpression ne3 = assertInstanceOf(NotEqualValueExpression.class, ne2.left);
+        StaticValueExpression left3 = assertInstanceOf(StaticValueExpression.class, ne3.left);
+        assertEquals(1L, left3.value);
+        StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, ne3.right);
+        assertEquals(2L, right3.value);
+    }
 }
