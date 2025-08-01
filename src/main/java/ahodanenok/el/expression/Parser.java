@@ -52,7 +52,20 @@ public class Parser {
     }
 
     private ValueExpressionBase expression() {
-        return equal();
+        return and();
+    }
+
+    private ValueExpressionBase and() {
+        ValueExpressionBase expr = equal();
+        while (true) {
+            if (match(TokenType.AMP_AMP) || match(TokenType.AND)) {
+                expr = new AndValueExpression(expr, equal());
+            } else {
+                break;
+            }
+        }
+
+        return expr;
     }
 
     private ValueExpressionBase equal() {

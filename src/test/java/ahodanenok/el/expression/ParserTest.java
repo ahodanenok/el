@@ -570,4 +570,45 @@ public class ParserTest {
         StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, ne3.right);
         assertEquals(2L, right3.value);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 && 2}",
+        "${1 and 2}",
+        "#{1 && 2}",
+        "#{1 and 2}",
+    })
+    public void testParse_And(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        AndValueExpression and = assertInstanceOf(AndValueExpression.class, parser.parseValue());
+        StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, and.left);
+        assertEquals(1L, left.value);
+        StaticValueExpression right = assertInstanceOf(StaticValueExpression.class, and.right);
+        assertEquals(2L, right.value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 && 2 && 3 && 4}",
+        "${1 and 2 and 3 and 4}",
+        "#{1 && 2 && 3 && 4}",
+        "#{1 and 2 and 3 and 4}"
+    })
+    public void testParse_And_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+
+        AndValueExpression and1 = assertInstanceOf(AndValueExpression.class, parser.parseValue());
+        StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, and1.right);
+        assertEquals(4L, right1.value);
+
+        AndValueExpression and2 = assertInstanceOf(AndValueExpression.class, and1.left);
+        StaticValueExpression right2 = assertInstanceOf(StaticValueExpression.class, and2.right);
+        assertEquals(3L, right2.value);
+
+        AndValueExpression and3 = assertInstanceOf(AndValueExpression.class, and2.left);
+        StaticValueExpression left3 = assertInstanceOf(StaticValueExpression.class, and3.left);
+        assertEquals(1L, left3.value);
+        StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, and3.right);
+        assertEquals(2L, right3.value);
+    }
 }
