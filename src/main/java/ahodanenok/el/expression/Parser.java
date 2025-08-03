@@ -52,17 +52,22 @@ public class Parser {
     }
 
     private ValueExpressionBase expression() {
-        return and();
+        return or();
+    }
+
+    private ValueExpressionBase or() {
+        ValueExpressionBase expr = and();
+        while (match(TokenType.BAR_BAR) || match(TokenType.OR)) {
+            expr = new OrValueExpression(expr, and());
+        }
+
+        return expr;
     }
 
     private ValueExpressionBase and() {
         ValueExpressionBase expr = equal();
-        while (true) {
-            if (match(TokenType.AMP_AMP) || match(TokenType.AND)) {
-                expr = new AndValueExpression(expr, equal());
-            } else {
-                break;
-            }
+        while (match(TokenType.AMP_AMP) || match(TokenType.AND)) {
+            expr = new AndValueExpression(expr, equal());
         }
 
         return expr;

@@ -611,4 +611,45 @@ public class ParserTest {
         StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, and3.right);
         assertEquals(2L, right3.value);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 || 2}",
+        "${1 or 2}",
+        "#{1 || 2}",
+        "#{1 or 2}",
+    })
+    public void testParse_Or(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        OrValueExpression and = assertInstanceOf(OrValueExpression.class, parser.parseValue());
+        StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, and.left);
+        assertEquals(1L, left.value);
+        StaticValueExpression right = assertInstanceOf(StaticValueExpression.class, and.right);
+        assertEquals(2L, right.value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 || 2 || 3 || 4}",
+        "${1 or 2 or 3 or 4}",
+        "#{1 || 2 || 3 || 4}",
+        "#{1 or 2 or 3 or 4}"
+    })
+    public void testParse_Or_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+
+        OrValueExpression or1 = assertInstanceOf(OrValueExpression.class, parser.parseValue());
+        StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, or1.right);
+        assertEquals(4L, right1.value);
+
+        OrValueExpression or2 = assertInstanceOf(OrValueExpression.class, or1.left);
+        StaticValueExpression right2 = assertInstanceOf(StaticValueExpression.class, or2.right);
+        assertEquals(3L, right2.value);
+
+        OrValueExpression or3 = assertInstanceOf(OrValueExpression.class, or2.left);
+        StaticValueExpression left3 = assertInstanceOf(StaticValueExpression.class, or3.left);
+        assertEquals(1L, left3.value);
+        StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, or3.right);
+        assertEquals(2L, right3.value);
+    }
 }
