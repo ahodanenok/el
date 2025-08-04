@@ -652,4 +652,78 @@ public class ParserTest {
         StaticValueExpression right3 = assertInstanceOf(StaticValueExpression.class, or3.right);
         assertEquals(2L, right3.value);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 ? 2 : 3}",
+        "#{1 ? 2 : 3}"
+    })
+    public void testParse_Conditinal(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        ConditionalValueExpression conditional = assertInstanceOf(ConditionalValueExpression.class, parser.parseValue());
+        StaticValueExpression condition = assertInstanceOf(StaticValueExpression.class, conditional.condition);
+        assertEquals(1L, condition.value);
+        StaticValueExpression onTrue = assertInstanceOf(StaticValueExpression.class, conditional.onTrue);
+        assertEquals(2L, onTrue.value);
+        StaticValueExpression onFalse = assertInstanceOf(StaticValueExpression.class, conditional.onFalse);
+        assertEquals(3L, onFalse.value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 ? 2 : 3 ? 4 : 5 ? 6 : 7}",
+        "#{1 ? 2 : 3 ? 4 : 5 ? 6 : 7}"
+    })
+    public void testParse_Conditinal_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+
+        ConditionalValueExpression conditional1 = assertInstanceOf(ConditionalValueExpression.class, parser.parseValue());
+        StaticValueExpression condition1 = assertInstanceOf(StaticValueExpression.class, conditional1.condition);
+        assertEquals(1L, condition1.value);
+        StaticValueExpression onTrue1 = assertInstanceOf(StaticValueExpression.class, conditional1.onTrue);
+        assertEquals(2L, onTrue1.value);
+
+        ConditionalValueExpression conditional2 = assertInstanceOf(ConditionalValueExpression.class, conditional1.onFalse);
+        StaticValueExpression condition2 = assertInstanceOf(StaticValueExpression.class, conditional2.condition);
+        assertEquals(3L, condition2.value);
+        StaticValueExpression onTrue2 = assertInstanceOf(StaticValueExpression.class, conditional2.onTrue);
+        assertEquals(4L, onTrue2.value);
+
+        ConditionalValueExpression conditional3 = assertInstanceOf(ConditionalValueExpression.class, conditional2.onFalse);
+        StaticValueExpression condition3 = assertInstanceOf(StaticValueExpression.class, conditional3.condition);
+        assertEquals(5L, condition3.value);
+        StaticValueExpression onTrue3 = assertInstanceOf(StaticValueExpression.class, conditional3.onTrue);
+        assertEquals(6L, onTrue3.value);
+        StaticValueExpression onFalse3 = assertInstanceOf(StaticValueExpression.class, conditional3.onFalse);
+        assertEquals(7L, onFalse3.value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 ? 2 ? 3 : 4 : 5 ? 6 : 7}",
+        "#{1 ? 2 ? 3 : 4 : 5 ? 6 : 7}"
+    })
+    public void testParse_Conditinal_Nested(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+
+        ConditionalValueExpression conditional1 = assertInstanceOf(ConditionalValueExpression.class, parser.parseValue());
+        StaticValueExpression condition1 = assertInstanceOf(StaticValueExpression.class, conditional1.condition);
+        assertEquals(1L, condition1.value);
+
+        ConditionalValueExpression conditional2 = assertInstanceOf(ConditionalValueExpression.class, conditional1.onTrue);
+        StaticValueExpression condition2 = assertInstanceOf(StaticValueExpression.class, conditional2.condition);
+        assertEquals(2L, condition2.value);
+        StaticValueExpression onTrue2 = assertInstanceOf(StaticValueExpression.class, conditional2.onTrue);
+        assertEquals(3L, onTrue2.value);
+        StaticValueExpression onFalse2 = assertInstanceOf(StaticValueExpression.class, conditional2.onFalse);
+        assertEquals(4L, onFalse2.value);
+
+        ConditionalValueExpression conditional3 = assertInstanceOf(ConditionalValueExpression.class, conditional1.onFalse);
+        StaticValueExpression condition3 = assertInstanceOf(StaticValueExpression.class, conditional3.condition);
+        assertEquals(5L, condition3.value);
+        StaticValueExpression onTrue3 = assertInstanceOf(StaticValueExpression.class, conditional3.onTrue);
+        assertEquals(6L, onTrue3.value);
+        StaticValueExpression onFalse3 = assertInstanceOf(StaticValueExpression.class, conditional3.onFalse);
+        assertEquals(7L, onFalse3.value);
+    }
 }

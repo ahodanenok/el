@@ -52,7 +52,19 @@ public class Parser {
     }
 
     private ValueExpressionBase expression() {
-        return or();
+        return conditional();
+    }
+
+    private ValueExpressionBase conditional() {
+        ValueExpressionBase expr = or();
+        if (match(TokenType.QUESTION)) {
+            ValueExpressionBase onTrue = conditional();
+            expect(TokenType.COLON);
+            ValueExpressionBase onFalse = conditional();
+            expr = new ConditionalValueExpression(expr, onTrue, onFalse);
+        }
+
+        return expr;
     }
 
     private ValueExpressionBase or() {
