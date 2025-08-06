@@ -52,7 +52,21 @@ public class Parser {
     }
 
     private ValueExpressionBase expression() {
-        return conditional();
+        return semicolon();
+    }
+
+    private ValueExpressionBase semicolon() {
+        ValueExpressionBase expr = conditional();
+        if (match(TokenType.SEMICOLON)) {
+            List<ValueExpressionBase> expressions = new ArrayList<>();
+            expressions.add(expr);
+            do {
+                expressions.add(conditional());
+            } while (match(TokenType.SEMICOLON));
+            expr = new SemicolonValueExpression(expressions);
+        }
+
+        return expr;
     }
 
     private ValueExpressionBase conditional() {

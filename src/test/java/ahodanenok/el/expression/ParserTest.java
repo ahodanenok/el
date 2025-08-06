@@ -726,4 +726,35 @@ public class ParserTest {
         StaticValueExpression onFalse3 = assertInstanceOf(StaticValueExpression.class, conditional3.onFalse);
         assertEquals(7L, onFalse3.value);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 ; 2}",
+        "#{1 ; 2}",
+    })
+    public void testParse_Semicolon(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        SemicolonValueExpression sc = assertInstanceOf(SemicolonValueExpression.class, parser.parseValue());
+        assertEquals(2, sc.expressions.size());
+        StaticValueExpression expr1 = assertInstanceOf(StaticValueExpression.class, sc.expressions.get(0));
+        assertEquals(1L, expr1.value);
+        StaticValueExpression expr2 = assertInstanceOf(StaticValueExpression.class, sc.expressions.get(1));
+        assertEquals(2L, expr2.value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${1 ; 2 ; 3 ; 4}",
+        "#{1 ; 2 ; 3 ; 4}",
+    })
+    public void testParse_Semicolon_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+
+        SemicolonValueExpression sc = assertInstanceOf(SemicolonValueExpression.class, parser.parseValue());
+        assertEquals(4, sc.expressions.size());
+        assertEquals(1L, assertInstanceOf(StaticValueExpression.class, sc.expressions.get(0)).value);
+        assertEquals(2L, assertInstanceOf(StaticValueExpression.class, sc.expressions.get(1)).value);
+        assertEquals(3L, assertInstanceOf(StaticValueExpression.class, sc.expressions.get(2)).value);
+        assertEquals(4L, assertInstanceOf(StaticValueExpression.class, sc.expressions.get(3)).value);
+    }
 }
