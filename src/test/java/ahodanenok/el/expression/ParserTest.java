@@ -757,4 +757,39 @@ public class ParserTest {
         assertEquals(3L, assertInstanceOf(StaticValueExpression.class, sc.expressions.get(2)).value);
         assertEquals(4L, assertInstanceOf(StaticValueExpression.class, sc.expressions.get(3)).value);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${(1 + 2)}",
+        "#{(1 + 2)}",
+    })
+    public void testParse_Parenthesis(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        ParenthesisValueExpression p = assertInstanceOf(ParenthesisValueExpression.class, parser.parseValue());
+        AddValueExpression add = assertInstanceOf(AddValueExpression.class, p.expr);
+        assertEquals(1L, assertInstanceOf(StaticValueExpression.class, add.left).value);
+        assertEquals(2L, assertInstanceOf(StaticValueExpression.class, add.right).value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${(1 + ((2 + 3) + 4))}",
+        "#{(1 + ((2 + 3) + 4))}",
+    })
+    public void testParse_Parenthesis_Nested(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+
+        ParenthesisValueExpression p1 = assertInstanceOf(ParenthesisValueExpression.class, parser.parseValue());
+        AddValueExpression add1 = assertInstanceOf(AddValueExpression.class, p1.expr);
+        assertEquals(1L, assertInstanceOf(StaticValueExpression.class, add1.left).value);
+
+        ParenthesisValueExpression p2 = assertInstanceOf(ParenthesisValueExpression.class, add1.right);
+        AddValueExpression add2 = assertInstanceOf(AddValueExpression.class, p2.expr);
+        assertEquals(4L, assertInstanceOf(StaticValueExpression.class, add2.right).value);
+
+        ParenthesisValueExpression p3 = assertInstanceOf(ParenthesisValueExpression.class, add2.left);
+        AddValueExpression add3 = assertInstanceOf(AddValueExpression.class, p3.expr);
+        assertEquals(2L, assertInstanceOf(StaticValueExpression.class, add3.left).value);
+        assertEquals(3L, assertInstanceOf(StaticValueExpression.class, add3.right).value);
+    }
 }

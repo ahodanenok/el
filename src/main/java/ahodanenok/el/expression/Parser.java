@@ -182,6 +182,16 @@ public class Parser {
         } else if (match(TokenType.EMPTY)) {
             return new EmptyValueExpression(expression());
         } else {
+            return parenthesis();
+        }
+    }
+
+    private ValueExpressionBase parenthesis() {
+        if (match(TokenType.PAREN_LEFT)) {
+            ParenthesisValueExpression expr = new ParenthesisValueExpression(expression());
+            expect(TokenType.PAREN_RIGHT);
+            return expr;
+        } else {
             return literal();
         }
     }
