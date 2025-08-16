@@ -6,13 +6,17 @@ import java.util.List;
 import ahodanenok.el.token.Token;
 import ahodanenok.el.token.TokenType;
 import ahodanenok.el.token.Tokenizer;
+import jakarta.el.ELContext;
+import jakarta.el.ValueExpression;
 
 public class Parser {
 
     private final Tokenizer tokenizer;
+    private final ELContext context;
 
-    public Parser(Tokenizer tokenizer) {
+    public Parser(Tokenizer tokenizer, ELContext context) {
         this.tokenizer = tokenizer;
+        this.context = context;
     }
 
     public ValueExpressionBase parseValue() {
@@ -192,11 +196,11 @@ public class Parser {
             expect(TokenType.PAREN_RIGHT);
             return expr;
         } else {
-            return literal();
+            return base();
         }
     }
 
-    private ValueExpressionBase literal() {
+    private ValueExpressionBase base() {
         Token token = tokenizer.next();
         return switch (token.getType()) {
             case BOOLEAN -> new StaticValueExpression(token.getValue());
@@ -204,8 +208,27 @@ public class Parser {
             case INTEGER -> new StaticValueExpression(token.getValue());
             case FLOAT -> new StaticValueExpression(token.getValue());
             case NULL -> new StaticValueExpression(token.getValue());
+            case IDENTIFIER -> {
+                ValueExpression mappedExpr;
+                if (context.getVariableMapper() != null) {
+                    mappedExpr = context.getVariableMapper().resolveVariable(token.getLexeme());
+                } else {
+                    mappedExpr = null;
+                }
+
+                yield new IdentifierValueExpression(token.getLexeme(), mappedExpr);
+            }
             default -> throw new IllegalStateException("Unexpected token: " + token.getType()); // todo: exception
         };
+    }
+
+    private ValueExpressionBase literal() {
+        Token token = tokenizer.next();
+        if (token.getType() == TokenType.STRING) {
+            return new StaticValueExpression(token.getValue());
+        } else {
+            return new StaticValueExpression(token.getLexeme());
+        }
     }
 
     private void expect(TokenType tokenType) {

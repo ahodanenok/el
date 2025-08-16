@@ -41,7 +41,7 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
     @Override
     public ValueExpression createValueExpression(ELContext context, String expression, Class<?> expectedType) {
         Tokenizer tokenizer = new Tokenizer(new StringReader(expression));
-        Parser parser = new Parser(tokenizer);
+        Parser parser = new Parser(tokenizer, context);
 
         ValueExpressionBase expr = parser.parseValue();
         expr.expressionString = expression;

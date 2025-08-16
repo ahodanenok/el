@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ahodanenok.el.token.Tokenizer;
+import jakarta.el.StandardELContext;
 
 public class ParserTest {
 
@@ -21,7 +22,7 @@ public class ParserTest {
         "#{not true}"
     })
     public void testParse_Not(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         NotValueExpression not = assertInstanceOf(NotValueExpression.class, parser.parseValue());
         StaticValueExpression bool = assertInstanceOf(StaticValueExpression.class, not.expr);
         assertEquals(true, bool.value);
@@ -35,7 +36,7 @@ public class ParserTest {
         "#{not not not 0}"
     })
     public void testParse_Not_Nested(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         NotValueExpression not1 = assertInstanceOf(NotValueExpression.class, parser.parseValue());
         NotValueExpression not2 = assertInstanceOf(NotValueExpression.class, not1.expr);
         NotValueExpression not3 = assertInstanceOf(NotValueExpression.class, not2.expr);
@@ -49,7 +50,7 @@ public class ParserTest {
         "#{empty 'abc'}",
     })
     public void testParse_Empty(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         EmptyValueExpression empty = assertInstanceOf(EmptyValueExpression.class, parser.parseValue());
         StaticValueExpression str = assertInstanceOf(StaticValueExpression.class, empty.expr);
         assertEquals("abc", str.value);
@@ -61,7 +62,7 @@ public class ParserTest {
         "#{empty empty empty null}",
     })
     public void testParse_Empty_Nested(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         EmptyValueExpression empty1 = assertInstanceOf(EmptyValueExpression.class, parser.parseValue());
         EmptyValueExpression empty2 = assertInstanceOf(EmptyValueExpression.class, empty1.expr);
         EmptyValueExpression empty3 = assertInstanceOf(EmptyValueExpression.class, empty2.expr);
@@ -75,7 +76,7 @@ public class ParserTest {
         "#{-true}",
     })
     public void testParse_Negate(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         NegateValueExpression neg = assertInstanceOf(NegateValueExpression.class, parser.parseValue());
         StaticValueExpression bool = assertInstanceOf(StaticValueExpression.class, neg.expr);
         assertEquals(true, bool.value);
@@ -87,7 +88,7 @@ public class ParserTest {
         "#{---false}",
     })
     public void testParse_Negate_Nested(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         NegateValueExpression neg1 = assertInstanceOf(NegateValueExpression.class, parser.parseValue());
         NegateValueExpression neg2 = assertInstanceOf(NegateValueExpression.class, neg1.expr);
         NegateValueExpression neg3 = assertInstanceOf(NegateValueExpression.class, neg2.expr);
@@ -101,7 +102,7 @@ public class ParserTest {
         "#{1 * 2}",
     })
     public void testParse_Multiply(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         MultiplyValueExpression div = assertInstanceOf(MultiplyValueExpression.class, parser.parseValue());
         StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, div.left);
         assertEquals(1L, left.value);
@@ -115,7 +116,7 @@ public class ParserTest {
         "#{1 * 2 * 3 * 4}",
     })
     public void testParse_Multiply_Chain(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         MultiplyValueExpression mul1 = assertInstanceOf(MultiplyValueExpression.class, parser.parseValue());
         StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, mul1.right);
@@ -140,7 +141,7 @@ public class ParserTest {
         "#{1 div 2}",
     })
     public void testParse_Divide(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         DivideValueExpression div = assertInstanceOf(DivideValueExpression.class, parser.parseValue());
         StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, div.left);
         assertEquals(1L, left.value);
@@ -156,7 +157,7 @@ public class ParserTest {
         "#{1 div 2 div 3 div 4}",
     })
     public void testParse_Divide_Chain(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         DivideValueExpression div1 = assertInstanceOf(DivideValueExpression.class, parser.parseValue());
         StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, div1.right);
@@ -181,7 +182,7 @@ public class ParserTest {
         "#{1 mod 2}",
     })
     public void testParse_Modulo(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         ModuloValueExpression div = assertInstanceOf(ModuloValueExpression.class, parser.parseValue());
         StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, div.left);
         assertEquals(1L, left.value);
@@ -197,7 +198,7 @@ public class ParserTest {
         "#{1 mod 2 mod 3 mod 4}",
     })
     public void testParse_Modulo_Chain(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         ModuloValueExpression mod1 = assertInstanceOf(ModuloValueExpression.class, parser.parseValue());
         StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, mod1.right);
@@ -220,7 +221,7 @@ public class ParserTest {
         "#{1 + 2}",
     })
     public void testParse_Add(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         AddValueExpression add = assertInstanceOf(AddValueExpression.class, parser.parseValue());
         StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, add.left);
         assertEquals(1L, left.value);
@@ -234,7 +235,7 @@ public class ParserTest {
         "#{1 + 2 + 3 + 4}",
     })
     public void testParse_Add_Chain(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         AddValueExpression add1 = assertInstanceOf(AddValueExpression.class, parser.parseValue());
         StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, add1.right);
@@ -257,7 +258,7 @@ public class ParserTest {
         "#{1 - 2}",
     })
     public void testParse_Subtract(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         SubtractValueExpression sub = assertInstanceOf(SubtractValueExpression.class, parser.parseValue());
         StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, sub.left);
         assertEquals(1L, left.value);
@@ -271,7 +272,7 @@ public class ParserTest {
         "#{1 - 2 - 3 - 4}",
     })
     public void testParse_Subtract_Chain(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         SubtractValueExpression sub1 = assertInstanceOf(SubtractValueExpression.class, parser.parseValue());
         StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, sub1.right);
@@ -294,7 +295,7 @@ public class ParserTest {
         "#{1 += 2}",
     })
     public void testParse_Concatenate(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         ConcatenateValueExpression div = assertInstanceOf(ConcatenateValueExpression.class, parser.parseValue());
         StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, div.left);
         assertEquals(1L, left.value);
@@ -308,7 +309,7 @@ public class ParserTest {
         "#{1 += 2 += 3 += 4}",
     })
     public void testParse_Concatenate_Chain(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         ConcatenateValueExpression concat1 = assertInstanceOf(ConcatenateValueExpression.class, parser.parseValue());
         StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, concat1.right);
@@ -333,7 +334,7 @@ public class ParserTest {
         "#{1 lt 2}",
     })
     public void testParse_LessThan(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         LessThanValueExpression lt = assertInstanceOf(LessThanValueExpression.class, parser.parseValue());
         StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, lt.left);
         assertEquals(1L, left.value);
@@ -349,7 +350,7 @@ public class ParserTest {
         "#{1 lt 2 lt 3 lt 4}",
     })
     public void testParse_LessThan_Chain(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         LessThanValueExpression lt1 = assertInstanceOf(LessThanValueExpression.class, parser.parseValue());
         StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, lt1.right);
@@ -374,7 +375,7 @@ public class ParserTest {
         "#{1 le 2}"
     })
     public void testParse_LessEqual(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         LessEqualValueExpression lt = assertInstanceOf(LessEqualValueExpression.class, parser.parseValue());
         StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, lt.left);
         assertEquals(1L, left.value);
@@ -390,7 +391,7 @@ public class ParserTest {
         "#{1 le 2 le 3 le 4}"
     })
     public void testParse_LessEqual_Chain(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         LessEqualValueExpression le1 = assertInstanceOf(LessEqualValueExpression.class, parser.parseValue());
         StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, le1.right);
@@ -415,7 +416,7 @@ public class ParserTest {
         "#{1 gt 2}",
     })
     public void testParse_GreaterThan(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         GreaterThanValueExpression gt = assertInstanceOf(GreaterThanValueExpression.class, parser.parseValue());
         StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, gt.left);
         assertEquals(1L, left.value);
@@ -431,7 +432,7 @@ public class ParserTest {
         "#{1 gt 2 gt 3 gt 4}"
     })
     public void testParse_GreaterThan_Chain(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         GreaterThanValueExpression gt1 = assertInstanceOf(GreaterThanValueExpression.class, parser.parseValue());
         StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, gt1.right);
@@ -456,7 +457,7 @@ public class ParserTest {
         "#{1 ge 2}",
     })
     public void testParse_GreaterEqual(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         GreaterEqualValueExpression ge = assertInstanceOf(GreaterEqualValueExpression.class, parser.parseValue());
         StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, ge.left);
         assertEquals(1L, left.value);
@@ -472,7 +473,7 @@ public class ParserTest {
         "#{1 ge 2 ge 3 ge 4}"
     })
     public void testParse_GreaterEqual_Chain(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         GreaterEqualValueExpression ge1 = assertInstanceOf(GreaterEqualValueExpression.class, parser.parseValue());
         StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, ge1.right);
@@ -497,7 +498,7 @@ public class ParserTest {
         "#{1 eq 2}",
     })
     public void testParse_Equal(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         EqualValueExpression eq = assertInstanceOf(EqualValueExpression.class, parser.parseValue());
         StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, eq.left);
         assertEquals(1L, left.value);
@@ -513,7 +514,7 @@ public class ParserTest {
         "#{1 eq 2 eq 3 eq 4}"
     })
     public void testParse_Equal_Chain(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         EqualValueExpression eq1 = assertInstanceOf(EqualValueExpression.class, parser.parseValue());
         StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, eq1.right);
@@ -538,7 +539,7 @@ public class ParserTest {
         "#{1 ne 2}",
     })
     public void testParse_NotEqual(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         NotEqualValueExpression eq = assertInstanceOf(NotEqualValueExpression.class, parser.parseValue());
         StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, eq.left);
         assertEquals(1L, left.value);
@@ -554,7 +555,7 @@ public class ParserTest {
         "#{1 ne 2 ne 3 ne 4}"
     })
     public void testParse_NotEqual_Chain(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         NotEqualValueExpression ne1 = assertInstanceOf(NotEqualValueExpression.class, parser.parseValue());
         StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, ne1.right);
@@ -579,7 +580,7 @@ public class ParserTest {
         "#{1 and 2}",
     })
     public void testParse_And(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         AndValueExpression and = assertInstanceOf(AndValueExpression.class, parser.parseValue());
         StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, and.left);
         assertEquals(1L, left.value);
@@ -595,7 +596,7 @@ public class ParserTest {
         "#{1 and 2 and 3 and 4}"
     })
     public void testParse_And_Chain(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         AndValueExpression and1 = assertInstanceOf(AndValueExpression.class, parser.parseValue());
         StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, and1.right);
@@ -620,7 +621,7 @@ public class ParserTest {
         "#{1 or 2}",
     })
     public void testParse_Or(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         OrValueExpression and = assertInstanceOf(OrValueExpression.class, parser.parseValue());
         StaticValueExpression left = assertInstanceOf(StaticValueExpression.class, and.left);
         assertEquals(1L, left.value);
@@ -636,7 +637,7 @@ public class ParserTest {
         "#{1 or 2 or 3 or 4}"
     })
     public void testParse_Or_Chain(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         OrValueExpression or1 = assertInstanceOf(OrValueExpression.class, parser.parseValue());
         StaticValueExpression right1 = assertInstanceOf(StaticValueExpression.class, or1.right);
@@ -659,7 +660,7 @@ public class ParserTest {
         "#{1 ? 2 : 3}"
     })
     public void testParse_Conditinal(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         ConditionalValueExpression conditional = assertInstanceOf(ConditionalValueExpression.class, parser.parseValue());
         StaticValueExpression condition = assertInstanceOf(StaticValueExpression.class, conditional.condition);
         assertEquals(1L, condition.value);
@@ -675,7 +676,7 @@ public class ParserTest {
         "#{1 ? 2 : 3 ? 4 : 5 ? 6 : 7}"
     })
     public void testParse_Conditinal_Chain(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         ConditionalValueExpression conditional1 = assertInstanceOf(ConditionalValueExpression.class, parser.parseValue());
         StaticValueExpression condition1 = assertInstanceOf(StaticValueExpression.class, conditional1.condition);
@@ -704,7 +705,7 @@ public class ParserTest {
         "#{1 ? 2 ? 3 : 4 : 5 ? 6 : 7}"
     })
     public void testParse_Conditinal_Nested(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         ConditionalValueExpression conditional1 = assertInstanceOf(ConditionalValueExpression.class, parser.parseValue());
         StaticValueExpression condition1 = assertInstanceOf(StaticValueExpression.class, conditional1.condition);
@@ -733,7 +734,7 @@ public class ParserTest {
         "#{1 ; 2}",
     })
     public void testParse_Semicolon(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         SemicolonValueExpression sc = assertInstanceOf(SemicolonValueExpression.class, parser.parseValue());
         assertEquals(2, sc.expressions.size());
         StaticValueExpression expr1 = assertInstanceOf(StaticValueExpression.class, sc.expressions.get(0));
@@ -748,7 +749,7 @@ public class ParserTest {
         "#{1 ; 2 ; 3 ; 4}",
     })
     public void testParse_Semicolon_Chain(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         SemicolonValueExpression sc = assertInstanceOf(SemicolonValueExpression.class, parser.parseValue());
         assertEquals(4, sc.expressions.size());
@@ -764,7 +765,7 @@ public class ParserTest {
         "#{(1 + 2)}",
     })
     public void testParse_Parenthesis(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         ParenthesisValueExpression p = assertInstanceOf(ParenthesisValueExpression.class, parser.parseValue());
         AddValueExpression add = assertInstanceOf(AddValueExpression.class, p.expr);
         assertEquals(1L, assertInstanceOf(StaticValueExpression.class, add.left).value);
@@ -777,7 +778,7 @@ public class ParserTest {
         "#{(1 + ((2 + 3) + 4))}",
     })
     public void testParse_Parenthesis_Nested(String code) {
-        Parser parser = new Parser(new Tokenizer(new StringReader(code)));
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         ParenthesisValueExpression p1 = assertInstanceOf(ParenthesisValueExpression.class, parser.parseValue());
         AddValueExpression add1 = assertInstanceOf(AddValueExpression.class, p1.expr);
@@ -791,5 +792,15 @@ public class ParserTest {
         AddValueExpression add3 = assertInstanceOf(AddValueExpression.class, p3.expr);
         assertEquals(2L, assertInstanceOf(StaticValueExpression.class, add3.left).value);
         assertEquals(3L, assertInstanceOf(StaticValueExpression.class, add3.right).value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${x}",
+        "#{x}",
+    })
+    public void testParse_Identifier(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+        assertEquals("x", assertInstanceOf(IdentifierValueExpression.class, parser.parseValue()).name);
     }
 }
