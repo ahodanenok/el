@@ -803,4 +803,36 @@ public class ParserTest {
         Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         assertEquals("x", assertInstanceOf(IdentifierValueExpression.class, parser.parseValue()).name);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${a = 1}",
+        "#{a = 1}",
+    })
+    public void testParse_Assignment(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+
+        AssignValueExpression assign = assertInstanceOf(AssignValueExpression.class, parser.parseValue());
+        assertEquals("a", assertInstanceOf(IdentifierValueExpression.class, assign.left).name);
+        assertEquals(Long.valueOf(1), assertInstanceOf(StaticValueExpression.class, assign.right).value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${a = b = c = 1}",
+        "#{a = b = c = 1}",
+    })
+    public void testParse_Assign_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+
+        AssignValueExpression assign1 = assertInstanceOf(AssignValueExpression.class, parser.parseValue());
+        assertEquals("a", assertInstanceOf(IdentifierValueExpression.class, assign1.left).name);
+
+        AssignValueExpression assign2 = assertInstanceOf(AssignValueExpression.class, assign1.right);
+        assertEquals("b", assertInstanceOf(IdentifierValueExpression.class, assign2.left).name);
+
+        AssignValueExpression assign3 = assertInstanceOf(AssignValueExpression.class, assign2.right);
+        assertEquals("c", assertInstanceOf(IdentifierValueExpression.class, assign3.left).name);
+        assertEquals(Long.valueOf(1), assertInstanceOf(StaticValueExpression.class, assign3.right).value);
+    }
 }

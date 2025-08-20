@@ -60,14 +60,24 @@ public class Parser {
     }
 
     private ValueExpressionBase semicolon() {
-        ValueExpressionBase expr = conditional();
+        ValueExpressionBase expr = assignment();
         if (match(TokenType.SEMICOLON)) {
             List<ValueExpressionBase> expressions = new ArrayList<>();
             expressions.add(expr);
             do {
-                expressions.add(conditional());
+                expressions.add(assignment());
             } while (match(TokenType.SEMICOLON));
             expr = new SemicolonValueExpression(expressions);
+        }
+
+        return expr;
+    }
+
+    private ValueExpressionBase assignment() {
+        ValueExpressionBase expr = conditional();
+        if (match(TokenType.EQUAL)) {
+            // todo: validate left side is an lvalue expression
+            expr = new AssignValueExpression(expr, assignment());
         }
 
         return expr;
