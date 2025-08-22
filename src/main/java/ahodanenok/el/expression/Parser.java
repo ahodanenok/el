@@ -206,8 +206,26 @@ public class Parser {
             expect(TokenType.PAREN_RIGHT);
             return expr;
         } else {
-            return base();
+            return propertyAccess();
         }
+    }
+
+    private ValueExpressionBase propertyAccess() {
+        ValueExpressionBase expr = base();
+        while (true) {
+            if (match(TokenType.SQUARE_LEFT)) {
+                expr = new PropertyAccessValueExpression(expr, expression());
+                expect(TokenType.SQUARE_RIGHT);
+            } else if (match(TokenType.DOT)) {
+                Token id = expect(TokenType.IDENTIFIER);
+                expr = new PropertyAccessValueExpression(
+                    expr, new StaticValueExpression(id.getLexeme()));
+            } else {
+                break;
+            }
+        }
+
+        return expr;
     }
 
     private ValueExpressionBase base() {
@@ -241,10 +259,17 @@ public class Parser {
         }
     }
 
-    private void expect(TokenType tokenType) {
-        if (!match(tokenType)) {
+    private Token expect(TokenType tokenType) {
+        if (!tokenizer.hasNext()) {
             throw new IllegalStateException("Expected " + tokenType);
         }
+
+        Token token = tokenizer.peek();
+        if (token.getType() != tokenType) {
+            throw new IllegalStateException("Expected " + tokenType);
+        }
+
+        return tokenizer.next();
     }
 
     private boolean match(TokenType tokenType) {

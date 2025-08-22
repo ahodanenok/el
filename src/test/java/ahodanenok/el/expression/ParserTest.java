@@ -835,4 +835,70 @@ public class ParserTest {
         assertEquals("c", assertInstanceOf(IdentifierValueExpression.class, assign3.left).name);
         assertEquals(Long.valueOf(1), assertInstanceOf(StaticValueExpression.class, assign3.right).value);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${x.y}",
+        "#{x.y}",
+    })
+    public void testParse_PropertyAccess_Dot(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+        PropertyAccessValueExpression prop = assertInstanceOf(PropertyAccessValueExpression.class, parser.parseValue());
+        assertEquals("x", assertInstanceOf(IdentifierValueExpression.class, prop.left).name);
+        assertEquals("y", assertInstanceOf(StaticValueExpression.class, prop.right).value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${x[y + 1]}",
+        "#{x[y + 1]}",
+    })
+    public void testParse_PropertyAccess_Brackets(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+        PropertyAccessValueExpression prop = assertInstanceOf(PropertyAccessValueExpression.class, parser.parseValue());
+        assertEquals("x", assertInstanceOf(IdentifierValueExpression.class, prop.left).name);
+        AddValueExpression add = assertInstanceOf(AddValueExpression.class, prop.right);
+        assertEquals("y", assertInstanceOf(IdentifierValueExpression.class, add.left).name);
+        assertEquals(1L, assertInstanceOf(StaticValueExpression.class, add.right).value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${a.b.c.d}",
+        "#{a.b.c.d}",
+    })
+    public void testParse_PropertyAccess_Dot_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+
+        PropertyAccessValueExpression prop_1 = assertInstanceOf(PropertyAccessValueExpression.class, parser.parseValue());
+        assertEquals("d", assertInstanceOf(StaticValueExpression.class, prop_1.right).value);
+
+        PropertyAccessValueExpression prop_2 = assertInstanceOf(PropertyAccessValueExpression.class, prop_1.left);
+        assertEquals("c", assertInstanceOf(StaticValueExpression.class, prop_2.right).value);
+
+        PropertyAccessValueExpression prop_3 = assertInstanceOf(PropertyAccessValueExpression.class, prop_2.left);
+        assertEquals("a", assertInstanceOf(IdentifierValueExpression.class, prop_3.left).name);
+        assertEquals("b", assertInstanceOf(StaticValueExpression.class, prop_3.right).value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${a[0][c+1]['d']}",
+        "#{a[0][c+1]['d']}",
+    })
+    public void testParse_PropertyAccess_Brackets_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+
+        PropertyAccessValueExpression prop_1 = assertInstanceOf(PropertyAccessValueExpression.class, parser.parseValue());
+        assertEquals("d", assertInstanceOf(StaticValueExpression.class, prop_1.right).value);
+
+        PropertyAccessValueExpression prop_2 = assertInstanceOf(PropertyAccessValueExpression.class, prop_1.left);
+        AddValueExpression add = assertInstanceOf(AddValueExpression.class, prop_2.right);
+        assertEquals("c", assertInstanceOf(IdentifierValueExpression.class, add.left).name);
+        assertEquals(1L, assertInstanceOf(StaticValueExpression.class, add.right).value);
+
+        PropertyAccessValueExpression prop_3 = assertInstanceOf(PropertyAccessValueExpression.class, prop_2.left);
+        assertEquals("a", assertInstanceOf(IdentifierValueExpression.class, prop_3.left).name);
+        assertEquals(0L, assertInstanceOf(StaticValueExpression.class, prop_3.right).value);
+    }
 }

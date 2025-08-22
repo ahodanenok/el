@@ -7,9 +7,19 @@ import jakarta.el.VariableMapper;
 
 public class StubELContext extends ELContext {
 
+    private ELResolver resolver;
+
+    public StubELContext() {
+
+    }
+
+    public StubELContext(ELResolver resolver) {
+        this.resolver = resolver;
+    }
+
     @Override
     public ELResolver getELResolver() {
-        throw new IllegalStateException("Unexpected call to method 'getELResolver'");
+        return resolver;
     }
 
     @Override
