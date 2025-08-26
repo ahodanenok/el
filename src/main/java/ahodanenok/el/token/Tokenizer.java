@@ -131,6 +131,7 @@ public class Tokenizer implements Iterator<Token> {
                 }
                 case '?' -> createToken(QUESTION, "?");
                 case ':' -> createToken(COLON, ":");
+                case ',' -> createToken(COMMA, ",");
                 case ';' -> createToken(SEMICOLON, ";");
                 case '(' -> createToken(PAREN_LEFT, "(");
                 case ')' -> createToken(PAREN_RIGHT, ")");

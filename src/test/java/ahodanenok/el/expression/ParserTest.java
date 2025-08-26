@@ -901,4 +901,94 @@ public class ParserTest {
         assertEquals("a", assertInstanceOf(IdentifierValueExpression.class, prop_3.left).name);
         assertEquals(0L, assertInstanceOf(StaticValueExpression.class, prop_3.right).value);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${a.b('x', 1)}",
+        "#{a.b('x', 1)}",
+    })
+    public void testParse_PropertyCall_Dot(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+
+        PropertyCallValueExpression call = assertInstanceOf(PropertyCallValueExpression.class, parser.parseValue());
+        assertEquals("a", assertInstanceOf(IdentifierValueExpression.class, call.left).name);
+        assertEquals("b", assertInstanceOf(StaticValueExpression.class, call.right).value);
+        assertEquals(2, call.params.size());
+        assertEquals("x", assertInstanceOf(StaticValueExpression.class, call.params.get(0)).value);
+        assertEquals(1L, assertInstanceOf(StaticValueExpression.class, call.params.get(1)).value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${a.b('x', 1).c().d(true, 'foo', 100)}",
+        "#{a.b('x', 1).c().d(true, 'foo', 100)}",
+    })
+    public void testParse_PropertyCall_Dot_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+
+        PropertyCallValueExpression call_1 = assertInstanceOf(PropertyCallValueExpression.class, parser.parseValue());
+        assertEquals("d", assertInstanceOf(StaticValueExpression.class, call_1.right).value);
+        assertEquals(3, call_1.params.size());
+        assertEquals(true, assertInstanceOf(StaticValueExpression.class, call_1.params.get(0)).value);
+        assertEquals("foo", assertInstanceOf(StaticValueExpression.class, call_1.params.get(1)).value);
+        assertEquals(100L, assertInstanceOf(StaticValueExpression.class, call_1.params.get(2)).value);
+
+        PropertyCallValueExpression call_2 = assertInstanceOf(PropertyCallValueExpression.class, call_1.left);
+        assertEquals("c", assertInstanceOf(StaticValueExpression.class, call_2.right).value);
+        assertEquals(0, call_2.params.size());
+
+        PropertyCallValueExpression call_3 = assertInstanceOf(PropertyCallValueExpression.class, call_2.left);
+        assertEquals("a", assertInstanceOf(IdentifierValueExpression.class, call_3.left).name);
+        assertEquals("b", assertInstanceOf(StaticValueExpression.class, call_3.right).value);
+        assertEquals(2, call_3.params.size());
+        assertEquals("x", assertInstanceOf(StaticValueExpression.class, call_3.params.get(0)).value);
+        assertEquals(1L, assertInstanceOf(StaticValueExpression.class, call_3.params.get(1)).value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${a[b + 1]('x', 2)}",
+        "#{a[b + 1]('x', 2)}",
+    })
+    public void testParse_PropertyCall_Brackets(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+
+        PropertyCallValueExpression call = assertInstanceOf(PropertyCallValueExpression.class, parser.parseValue());
+        assertEquals("a", assertInstanceOf(IdentifierValueExpression.class, call.left).name);
+        AddValueExpression add = assertInstanceOf(AddValueExpression.class, call.right);
+        assertEquals("b", assertInstanceOf(IdentifierValueExpression.class, add.left).name);
+        assertEquals(1L, assertInstanceOf(StaticValueExpression.class, add.right).value);
+        assertEquals(2, call.params.size());
+        assertEquals("x", assertInstanceOf(StaticValueExpression.class, call.params.get(0)).value);
+        assertEquals(2L, assertInstanceOf(StaticValueExpression.class, call.params.get(1)).value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${a[b + 1]('x', 2)['c']()[0]('k', 10, true)}",
+        "#{a[b + 1]('x', 2)['c']()[0]('k', 10, true)}",
+    })
+    public void testParse_PropertyCall_Brackets_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+
+        PropertyCallValueExpression call_1 = assertInstanceOf(PropertyCallValueExpression.class, parser.parseValue());
+        assertEquals(0L, assertInstanceOf(StaticValueExpression.class, call_1.right).value);
+        assertEquals(3, call_1.params.size());
+        assertEquals("k", assertInstanceOf(StaticValueExpression.class, call_1.params.get(0)).value);
+        assertEquals(10L, assertInstanceOf(StaticValueExpression.class, call_1.params.get(1)).value);
+        assertEquals(true, assertInstanceOf(StaticValueExpression.class, call_1.params.get(2)).value);
+
+        PropertyCallValueExpression call_2 = assertInstanceOf(PropertyCallValueExpression.class, call_1.left);
+        assertEquals("c", assertInstanceOf(StaticValueExpression.class, call_2.right).value);
+        assertEquals(0, call_2.params.size());
+
+        PropertyCallValueExpression call_3 = assertInstanceOf(PropertyCallValueExpression.class, call_2.left);
+        assertEquals("a", assertInstanceOf(IdentifierValueExpression.class, call_3.left).name);
+        AddValueExpression add = assertInstanceOf(AddValueExpression.class, call_3.right);
+        assertEquals("b", assertInstanceOf(IdentifierValueExpression.class, add.left).name);
+        assertEquals(1L, assertInstanceOf(StaticValueExpression.class, add.right).value);
+        assertEquals(2, call_3.params.size());
+        assertEquals("x", assertInstanceOf(StaticValueExpression.class, call_3.params.get(0)).value);
+        assertEquals(2L, assertInstanceOf(StaticValueExpression.class, call_3.params.get(1)).value);
+    }
 }

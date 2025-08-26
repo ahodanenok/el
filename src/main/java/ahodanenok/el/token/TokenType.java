@@ -17,6 +17,7 @@ public enum TokenType {
     EMPTY, // empty
     QUESTION, // ?
     COLON, // :
+    COMMA, // ,
     SEMICOLON, // ;
     PAREN_LEFT,  // (
     PAREN_RIGHT, // )

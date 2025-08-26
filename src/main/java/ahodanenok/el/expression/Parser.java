@@ -206,22 +206,35 @@ public class Parser {
             expect(TokenType.PAREN_RIGHT);
             return expr;
         } else {
-            return propertyAccess();
+            return property();
         }
     }
 
-    private ValueExpressionBase propertyAccess() {
+    private ValueExpressionBase property() {
         ValueExpressionBase expr = base();
         while (true) {
+            ValueExpressionBase propertyExpr;
             if (match(TokenType.SQUARE_LEFT)) {
-                expr = new PropertyAccessValueExpression(expr, expression());
+                propertyExpr = expression();
                 expect(TokenType.SQUARE_RIGHT);
             } else if (match(TokenType.DOT)) {
                 Token id = expect(TokenType.IDENTIFIER);
-                expr = new PropertyAccessValueExpression(
-                    expr, new StaticValueExpression(id.getLexeme()));
+                propertyExpr = new StaticValueExpression(id.getLexeme());
             } else {
                 break;
+            }
+
+            if (match(TokenType.PAREN_LEFT)) {
+                List<ValueExpression> params = new ArrayList<>();
+                if (!match(TokenType.PAREN_RIGHT)) {
+                    do {
+                        params.add(expression());
+                    } while (match(TokenType.COMMA));
+                    expect(TokenType.PAREN_RIGHT);
+                }
+                expr = new PropertyCallValueExpression(expr, propertyExpr, params);
+            } else {
+                expr = new PropertyAccessValueExpression(expr, propertyExpr);
             }
         }
 

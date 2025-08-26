@@ -6,7 +6,7 @@ import jakarta.el.FunctionMapper;
 import jakarta.el.VariableMapper;
 
 public class StubELContext extends ELContext {
-
+    
     private ELResolver resolver;
 
     public StubELContext() {

@@ -43,6 +43,7 @@ public class TokenizerTest {
         ==, EQUAL_EQUAL
         ?, QUESTION
         :, COLON
+        ',', COMMA
         ;, SEMICOLON
         (, PAREN_LEFT
         ), PAREN_RIGHT
