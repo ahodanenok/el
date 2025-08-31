@@ -1,5 +1,7 @@
 package ahodanenok.el.expression;
 
+import static ahodanenok.el.token.TokenType.COLON;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -250,17 +252,66 @@ public class Parser {
             case FLOAT -> new StaticValueExpression(token.getValue());
             case NULL -> new StaticValueExpression(token.getValue());
             case IDENTIFIER -> {
-                ValueExpression mappedExpr;
-                if (context.getVariableMapper() != null) {
-                    mappedExpr = context.getVariableMapper().resolveVariable(token.getLexeme());
+                // if (match(TokenType.ARROW)) {
+                    // todo: parse lambda expr
+                // } else
+                if (match(COLON)) {
+                    Token localName = expect(TokenType.IDENTIFIER);
+                    expect(TokenType.PAREN_LEFT);
+                    yield functionCall(token.getLexeme(), localName.getLexeme());
+                } else if (match(TokenType.PAREN_LEFT)) {
+                    yield functionCall(null, token.getLexeme());
                 } else {
-                    mappedExpr = null;
-                }
+                    ValueExpression mappedExpr;
+                    if (context.getVariableMapper() != null) {
+                        mappedExpr = context.getVariableMapper().resolveVariable(token.getLexeme());
+                    } else {
+                        mappedExpr = null;
+                    }
 
-                yield new IdentifierValueExpression(token.getLexeme(), mappedExpr);
+                    yield new IdentifierValueExpression(token.getLexeme(), mappedExpr);
+                }
             }
             default -> throw new IllegalStateException("Unexpected token: " + token.getType()); // todo: exception
         };
+    }
+
+    private ValueExpressionBase functionCall(String prefix, String localName) {
+        ValueExpression variableExpr;
+        if (prefix == null && context.getVariableMapper() != null) {
+            variableExpr = context.getVariableMapper().resolveVariable(localName);
+        } else {
+            variableExpr = null;
+        }
+
+        FunctionCallValueExpression call = new FunctionCallValueExpression(
+            prefix, localName,
+            variableExpr,
+            context.getFunctionMapper().resolveFunction(prefix, localName),
+            parseArgs());
+        expect(TokenType.PAREN_RIGHT);
+
+        while (match(TokenType.PAREN_LEFT)) {
+            call = new FunctionCallValueExpression(call, parseArgs());
+            expect(TokenType.PAREN_RIGHT);
+        }
+
+        return call;
+    }
+
+    private List<ValueExpressionBase> parseArgs() {
+        List<ValueExpressionBase> args = new ArrayList<>();
+        if (lookahead(TokenType.PAREN_RIGHT, false)) {
+            return args;
+        }
+
+        args.add(expression());
+        while (!lookahead(TokenType.PAREN_RIGHT, false)) {
+            expect(TokenType.COMMA);
+            args.add(expression());
+        }
+
+        return args;
     }
 
     private ValueExpressionBase literal() {
@@ -286,6 +337,10 @@ public class Parser {
     }
 
     private boolean match(TokenType tokenType) {
+        return lookahead(tokenType, true);
+    }
+
+    private boolean lookahead(TokenType tokenType, boolean consume) {
         if (!tokenizer.hasNext()) {
             return false;
         }
@@ -295,7 +350,10 @@ public class Parser {
             return false;
         }
 
-        tokenizer.next();
+        if (consume) {
+            tokenizer.next();
+        }
+
         return true;
     }
 }

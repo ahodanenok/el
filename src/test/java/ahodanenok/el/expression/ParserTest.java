@@ -2,15 +2,19 @@ package ahodanenok.el.expression;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.StringReader;
+import java.lang.reflect.Method;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ahodanenok.el.token.Tokenizer;
+import ahodanenok.el.utils.StubELContext;
+import jakarta.el.FunctionMapper;
 import jakarta.el.StandardELContext;
+import jakarta.el.VariableMapper;
 
 public class ParserTest {
 
@@ -990,5 +994,103 @@ public class ParserTest {
         assertEquals(2, call_3.params.size());
         assertEquals("x", assertInstanceOf(StaticValueExpression.class, call_3.params.get(0)).value);
         assertEquals(2L, assertInstanceOf(StaticValueExpression.class, call_3.params.get(1)).value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${a(b + 1, 'c')}",
+        "#{a(b + 1, 'c')}",
+    })
+    public void testParse_FunctionCall(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+
+        FunctionCallValueExpression call = assertInstanceOf(FunctionCallValueExpression.class, parser.parseValue());
+        assertNull(call.prefix);
+        assertEquals("a", call.localName);
+        assertNull(call.variableExpr);
+        assertNull(call.function);
+        assertNull(call.method);
+        assertEquals(2, call.args.size());
+        AddValueExpression add = assertInstanceOf(AddValueExpression.class, call.args.get(0));
+        assertEquals("b", assertInstanceOf(IdentifierValueExpression.class, add.left).name);
+        assertEquals(1L, assertInstanceOf(StaticValueExpression.class, add.right).value);
+        assertEquals("c", assertInstanceOf(StaticValueExpression.class, call.args.get(1)).value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${math:max(1, 2)}",
+        "#{math:max(1, 2)}",
+    })
+    public void testParse_FunctionCall_Prefixed(String code) throws Exception {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StubELContext() {
+            @Override
+            public VariableMapper getVariableMapper() {
+                return null;
+            }
+
+            @Override
+            public FunctionMapper getFunctionMapper() {
+                return new FunctionMapper() {
+                    @Override
+                    public Method resolveFunction(String prefix, String localName) {
+                        assertEquals("math", prefix);
+                        assertEquals("max", localName);
+                        try {
+                            return Math.class.getMethod("max", long.class, long.class);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                };
+            }
+        });
+
+        FunctionCallValueExpression call = assertInstanceOf(FunctionCallValueExpression.class, parser.parseValue());
+        assertEquals("math", call.prefix);
+        assertEquals("max", call.localName);
+        assertNull(call.variableExpr);
+        assertNull(call.function);
+        assertEquals(Math.class.getMethod("max", long.class, long.class), call.method);
+        assertEquals(2, call.args.size());
+        assertEquals(1L, assertInstanceOf(StaticValueExpression.class, call.args.get(0)).value);
+        assertEquals(2L, assertInstanceOf(StaticValueExpression.class, call.args.get(1)).value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${a(b + 1, 'c')()(true, 10, x)}",
+        "#{a(b + 1, 'c')()(true, 10, x)}",
+    })
+    public void testParse_FunctionCall_Chain(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+
+        FunctionCallValueExpression call_1 = assertInstanceOf(FunctionCallValueExpression.class, parser.parseValue());
+        assertNull(call_1.prefix);
+        assertNull(call_1.localName);
+        assertNull(call_1.variableExpr);
+        assertNull(call_1.method);
+        assertEquals(3, call_1.args.size());
+        assertEquals(true, assertInstanceOf(StaticValueExpression.class, call_1.args.get(0)).value);
+        assertEquals(10L, assertInstanceOf(StaticValueExpression.class, call_1.args.get(1)).value);
+        assertEquals("x", assertInstanceOf(IdentifierValueExpression.class, call_1.args.get(2)).name);
+
+        FunctionCallValueExpression call_2 = assertInstanceOf(FunctionCallValueExpression.class, call_1.function);
+        assertNull(call_2.prefix);
+        assertNull(call_2.localName);
+        assertNull(call_2.variableExpr);
+        assertNull(call_2.method);
+        assertEquals(0, call_2.args.size());
+
+        FunctionCallValueExpression call_3 = assertInstanceOf(FunctionCallValueExpression.class, call_2.function);
+        assertNull(call_3.prefix);
+        assertEquals("a", call_3.localName);
+        assertNull(call_3.function);
+        assertNull(call_3.method);
+        assertEquals(2, call_3.args.size());
+        AddValueExpression add = assertInstanceOf(AddValueExpression.class, call_3.args.get(0));
+        assertEquals("b", assertInstanceOf(IdentifierValueExpression.class, add.left).name);
+        assertEquals(1L, assertInstanceOf(StaticValueExpression.class, add.right).value);
+        assertEquals("c", assertInstanceOf(StaticValueExpression.class, call_3.args.get(1)).value);
     }
 }
