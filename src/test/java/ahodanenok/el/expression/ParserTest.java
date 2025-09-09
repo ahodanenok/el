@@ -1093,4 +1093,78 @@ public class ParserTest {
         assertEquals(1L, assertInstanceOf(StaticValueExpression.class, add.right).value);
         assertEquals("c", assertInstanceOf(StaticValueExpression.class, call_3.args.get(1)).value);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${() -> 'a'}",
+        "#{() -> 'a'}",
+    })
+    public void testParse_Lambda_NoArgs(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+
+        LambdaValueExpression lambda = assertInstanceOf(LambdaValueExpression.class, parser.parseValue());
+        assertEquals(0, lambda.params.size());
+        assertEquals("a", assertInstanceOf(StaticValueExpression.class, lambda.body).value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${x -> x + 1}",
+        "${(x) -> x + 1}",
+        "#{x -> x + 1}",
+        "#{(x) -> x + 1}",
+    })
+    public void testParse_Lambda_OneArg(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+
+        LambdaValueExpression lambda = assertInstanceOf(LambdaValueExpression.class, parser.parseValue());
+        assertEquals(1, lambda.params.size());
+        assertEquals("x", lambda.params.get(0));
+        AddValueExpression add = assertInstanceOf(AddValueExpression.class, lambda.body);
+        assertEquals("x", assertInstanceOf(IdentifierValueExpression.class, add.left).name);
+        assertEquals(1L, assertInstanceOf(StaticValueExpression.class, add.right).value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${(a, b, c) -> (a - b) / c}",
+        "#{(a, b, c) -> (a - b) / c}",
+    })
+    public void testParse_Lambda_MultipleArgs(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+
+        LambdaValueExpression lambda = assertInstanceOf(LambdaValueExpression.class, parser.parseValue());
+        assertEquals(3, lambda.params.size());
+        assertEquals("a", lambda.params.get(0));
+        assertEquals("b", lambda.params.get(1));
+        assertEquals("c", lambda.params.get(2));
+        DivideValueExpression div = assertInstanceOf(DivideValueExpression.class, lambda.body);
+        assertEquals("c", assertInstanceOf(IdentifierValueExpression.class, div.right).name);
+        SubtractValueExpression sub = assertInstanceOf(SubtractValueExpression.class,
+            assertInstanceOf(ParenthesisValueExpression.class, div.left).expr);
+        assertEquals("a", assertInstanceOf(IdentifierValueExpression.class, sub.left).name);
+        assertEquals("b", assertInstanceOf(IdentifierValueExpression.class, sub.right).name);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${() -> a -> (b, c) -> true}",
+        "#{() -> a -> (b, c) -> true}",
+    })
+    public void testParse_Lambda_Nested(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
+
+        LambdaValueExpression lambda1 = assertInstanceOf(LambdaValueExpression.class, parser.parseValue());
+        assertEquals(0, lambda1.params.size());
+
+        LambdaValueExpression lambda2 = assertInstanceOf(LambdaValueExpression.class, lambda1.body);
+        assertEquals(1, lambda2.params.size());
+        assertEquals("a", lambda2.params.get(0));
+
+        LambdaValueExpression lambda3 = assertInstanceOf(LambdaValueExpression.class, lambda2.body);
+        assertEquals(2, lambda3.params.size());
+        assertEquals("b", lambda3.params.get(0));
+        assertEquals("c", lambda3.params.get(1));
+        assertEquals(true, assertInstanceOf(StaticValueExpression.class, lambda3.body).value);
+    }
 }

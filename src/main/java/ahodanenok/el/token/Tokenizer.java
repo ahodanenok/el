@@ -32,7 +32,6 @@ public class Tokenizer implements Iterator<Token> {
     }
 
     private final PushbackReader reader;
-    private Token pendingToken;
 
     public Tokenizer(Reader reader) {
         this.reader = new PushbackReader(reader, 2);
@@ -40,10 +39,6 @@ public class Tokenizer implements Iterator<Token> {
 
     @Override
     public boolean hasNext() {
-        if (pendingToken != null) {
-            return true;
-        }
-
         try {
             skipWhitespaces();
 
@@ -60,29 +55,9 @@ public class Tokenizer implements Iterator<Token> {
         }
     }
 
-    public Token peek() {
-        if (pendingToken != null) {
-            return pendingToken;
-        }
-
-        if (!hasNext()) {
-            pendingToken = null;
-            return null;
-        }
-
-        pendingToken = next();
-        return pendingToken;
-    }
-
     @Override
     public Token next() {
         Token token;
-        if (pendingToken != null) {
-            token = pendingToken;
-            pendingToken = null;
-            return token;
-        }
-
         try {
             token = readNext();
         } catch (IOException e) {

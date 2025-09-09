@@ -5,6 +5,7 @@ import static ahodanenok.el.token.TokenType.COLON;
 import java.util.ArrayList;
 import java.util.List;
 
+import ahodanenok.el.token.LookaheadTokenizer;
 import ahodanenok.el.token.Token;
 import ahodanenok.el.token.TokenType;
 import ahodanenok.el.token.Tokenizer;
@@ -13,11 +14,11 @@ import jakarta.el.ValueExpression;
 
 public class Parser {
 
-    private final Tokenizer tokenizer;
+    private final LookaheadTokenizer tokenizer;
     private final ELContext context;
 
     public Parser(Tokenizer tokenizer, ELContext context) {
-        this.tokenizer = tokenizer;
+        this.tokenizer = new LookaheadTokenizer(tokenizer, 5);
         this.context = context;
     }
 
@@ -33,7 +34,7 @@ public class Parser {
         // todo: collect all
         // List<ValueExpressionBase> expressions = new ArrayList<>();
 
-        Token token = tokenizer.peek();
+        Token token = tokenizer.peek(1);
         return switch (token.getType()) {
             case DOLLAR -> dollarExpression();
             case HASH -> hashExpression();
@@ -76,13 +77,39 @@ public class Parser {
     }
 
     private ValueExpressionBase assignment() {
-        ValueExpressionBase expr = conditional();
+        ValueExpressionBase expr = lambda();
         if (match(TokenType.EQUAL)) {
             // todo: validate left side is an lvalue expression
             expr = new AssignValueExpression(expr, assignment());
         }
 
         return expr;
+    }
+
+    private ValueExpressionBase lambda() {
+        if (peek(TokenType.IDENTIFIER, TokenType.ARROW)) {
+            Token param = tokenizer.next();
+            expect(TokenType.ARROW);
+
+            return new LambdaValueExpression(List.of(param.getLexeme()), expression());
+        } else if (peek(TokenType.PAREN_LEFT, TokenType.PAREN_RIGHT, TokenType.ARROW)
+                || peek(TokenType.PAREN_LEFT, TokenType.IDENTIFIER, TokenType.COMMA)
+                || peek(TokenType.PAREN_LEFT, TokenType.IDENTIFIER, TokenType.PAREN_RIGHT, TokenType.ARROW)) {
+            List<String> params = new ArrayList<>();
+            expect(TokenType.PAREN_LEFT);
+            while (peek(TokenType.IDENTIFIER)) {
+                params.add(tokenizer.next().getLexeme());
+                if (!peek(TokenType.PAREN_RIGHT)) {
+                    expect(TokenType.COMMA);
+                }
+            }
+            expect(TokenType.PAREN_RIGHT);
+            expect(TokenType.ARROW);
+
+            return new LambdaValueExpression(params, expression());
+        } else {
+            return conditional();
+        }
     }
 
     private ValueExpressionBase conditional() {
@@ -252,9 +279,6 @@ public class Parser {
             case FLOAT -> new StaticValueExpression(token.getValue());
             case NULL -> new StaticValueExpression(token.getValue());
             case IDENTIFIER -> {
-                // if (match(TokenType.ARROW)) {
-                    // todo: parse lambda expr
-                // } else
                 if (match(COLON)) {
                     Token localName = expect(TokenType.IDENTIFIER);
                     expect(TokenType.PAREN_LEFT);
@@ -288,25 +312,25 @@ public class Parser {
             prefix, localName,
             variableExpr,
             context.getFunctionMapper().resolveFunction(prefix, localName),
-            parseArgs());
+            args());
         expect(TokenType.PAREN_RIGHT);
 
         while (match(TokenType.PAREN_LEFT)) {
-            call = new FunctionCallValueExpression(call, parseArgs());
+            call = new FunctionCallValueExpression(call, args());
             expect(TokenType.PAREN_RIGHT);
         }
 
         return call;
     }
 
-    private List<ValueExpressionBase> parseArgs() {
+    private List<ValueExpressionBase> args() {
         List<ValueExpressionBase> args = new ArrayList<>();
-        if (lookahead(TokenType.PAREN_RIGHT, false)) {
+        if (peek(TokenType.PAREN_RIGHT)) {
             return args;
         }
 
         args.add(expression());
-        while (!lookahead(TokenType.PAREN_RIGHT, false)) {
+        while (!peek(TokenType.PAREN_RIGHT)) {
             expect(TokenType.COMMA);
             args.add(expression());
         }
@@ -328,30 +352,33 @@ public class Parser {
             throw new IllegalStateException("Expected " + tokenType);
         }
 
-        Token token = tokenizer.peek();
+        Token token = tokenizer.peek(1);
         if (token.getType() != tokenType) {
-            throw new IllegalStateException("Expected " + tokenType);
+            throw new IllegalStateException("Expected %s, got %s".formatted(tokenType, token.getType()));
         }
 
         return tokenizer.next();
     }
 
     private boolean match(TokenType tokenType) {
-        return lookahead(tokenType, true);
+        if (peek(tokenType)) {
+            tokenizer.next();
+            return true;
+        } else {
+            return false;
+        }
     }
 
-    private boolean lookahead(TokenType tokenType, boolean consume) {
-        if (!tokenizer.hasNext()) {
-            return false;
-        }
+    private boolean peek(TokenType... tokenTypes) {
+        for (int i = 0; i < tokenTypes.length; i++) {
+            Token token = tokenizer.peek(i + 1);
+            if (token == null) {
+                return false;
+            }
 
-        Token token = tokenizer.peek();
-        if (token.getType() != tokenType) {
-            return false;
-        }
-
-        if (consume) {
-            tokenizer.next();
+            if (token.getType() != tokenTypes[i]) {
+                return false;
+            }
         }
 
         return true;

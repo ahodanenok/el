@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import jakarta.el.ELContext;
 import jakarta.el.ELException;
+import jakarta.el.LambdaExpression;
 import jakarta.el.ValueExpression;
 
 class FunctionCallValueExpression extends ValueExpressionBase {
@@ -48,28 +49,27 @@ class FunctionCallValueExpression extends ValueExpressionBase {
     }
 
     private Object getValueInternal(ELContext context) throws Exception {
-        Object function = null;
-        if (this.function != null) {
-            function = this.function;
-        } else if (prefix != null) {
+        Object functionObj = null;
+        if (function != null) {
+            functionObj = this.function;
+        } else if (prefix == null && method == null) {
             if (context.isLambdaArgument(localName)) {
-                function = context.getLambdaArgument(localName);
+                functionObj = context.getLambdaArgument(localName);
             } else if (variableExpr != null) {
-                function = variableExpr.getValue(context);
+                functionObj = variableExpr.getValue(context);
             } else  {
                 Object resolvedValue = context.getELResolver().getValue(context, null, localName);
                 if (context.isPropertyResolved()) {
-                    function = resolvedValue;
+                    functionObj = resolvedValue;
                 }
             }
         }
 
-        // if (function instanceof LambdaValueExpression) {
-            // todo: impl lambda call
-        // } else
-        if (method != null) {
+        if (functionObj instanceof LambdaExpression lambda) {
+            return lambda.invoke(context, evaluateArgs(context));
+        } else if (method != null) {
             return method.invoke(null, evaluateArgs(context));
-        } else if (function instanceof String name) {
+        } else if (functionObj instanceof String name) {
             // if (name of imported class) {
                 // todo: invoke constructor
             // }
@@ -79,8 +79,8 @@ class FunctionCallValueExpression extends ValueExpressionBase {
 
             throw new ELException("Function with name '%s' not found".formatted(name));
         } else {
-            if (function != null) {
-                throw new ELException("Object of type '%s' can't be invoked as function".formatted(function.getClass().getName()));
+            if (functionObj != null) {
+                throw new ELException("Object of type '%s' can't be invoked as function".formatted(functionObj.getClass().getName()));
             } else {
                 throw new ELException("Null can't be invoked as function");
             }
