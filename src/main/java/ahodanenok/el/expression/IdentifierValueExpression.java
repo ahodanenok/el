@@ -1,10 +1,11 @@
 package ahodanenok.el.expression;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Objects;
 
 import jakarta.el.ELContext;
-import jakarta.el.PropertyNotFoundException;
-import jakarta.el.PropertyNotWritableException;
+import jakarta.el.ELException;
 import jakarta.el.ValueExpression;
 import jakarta.el.ValueReference;
 
@@ -27,7 +28,12 @@ public class IdentifierValueExpression extends ValueExpressionBase {
         } else {
             Class<?> type = context.getELResolver().getType(context, null, name);
             if (!context.isPropertyResolved()) {
-                throw new PropertyNotFoundException("todo");
+                Field field = resolveStaticField(context);
+                if (Modifier.isFinal(field.getModifiers())) {
+                    return null;
+                }
+
+                return field.getType();
             }
 
             return type;
@@ -43,8 +49,7 @@ public class IdentifierValueExpression extends ValueExpressionBase {
         } else {
             boolean readOnly = context.getELResolver().isReadOnly(context, null, name);
             if (!context.isPropertyResolved()) {
-                // todo: static field
-                throw new PropertyNotFoundException("todo");
+                return Modifier.isFinal(resolveStaticField(context).getModifiers());
             }
 
             return readOnly;
@@ -62,8 +67,13 @@ public class IdentifierValueExpression extends ValueExpressionBase {
         } else {
             value = context.getELResolver().getValue(context, null, name);
             if (!context.isPropertyResolved()) {
-                // todo: static field
-                throw new PropertyNotFoundException("todo");
+                Field field = resolveStaticField(context);
+                try {
+                    value = field.get(null);
+                } catch (Exception e) {
+                    throw new ELException("Failed to get value from field '%s.%s'".formatted(
+                        field.getDeclaringClass().getName(), field.getName()), e);
+                }
             }
         }
 
@@ -73,14 +83,25 @@ public class IdentifierValueExpression extends ValueExpressionBase {
     @Override
     public void setValue(ELContext context, Object value) {
         if (context.isLambdaArgument(name)) {
-            throw new PropertyNotWritableException("'%s' is a lambda argument".formatted(name));
+            throw new ELException("'%s' is a lambda argument".formatted(name));
         } else if (varExpr != null) {
             varExpr.setValue(context, value);
         } else {
             context.getELResolver().setValue(context, null, name, value);
             if (!context.isPropertyResolved()) {
-                // todo: static field
-                throw new PropertyNotFoundException("todo");
+                Field field = resolveStaticField(context);
+                if (Modifier.isFinal(field.getModifiers())) {
+                    throw new ELException("Static field '%s.%s' is read-only"
+                        .formatted(field.getDeclaringClass().getName(), field.getName()));
+                }
+
+                try {
+                    field.set(null, value);
+                } catch (Exception e) {
+                    throw new ELException("Failed to set value of type '%s' to field '%s.%s'".formatted(
+                        value != null ? value.getClass().getName() : null,
+                        field.getDeclaringClass().getName(), field.getName()), e);
+                }
             }
         }
     }
@@ -107,5 +128,26 @@ public class IdentifierValueExpression extends ValueExpressionBase {
 
         IdentifierValueExpression other = (IdentifierValueExpression) obj;
         return name.equals(other.name) && Objects.equals(varExpr, other.varExpr);
+    }
+
+    private Field resolveStaticField(ELContext context) {
+        Class<?> resolvedClass = context.getImportHandler().resolveStatic(name);
+        if (resolvedClass == null) {
+            throw new ELException("Failed to resolve static field '%s'".formatted(name));
+        }
+
+        Field field;
+        try {
+            field = resolvedClass.getField(name);
+        } catch (Exception e) {
+            throw new ELException("Failed to resolve static field '%s'".formatted(name), e);
+        }
+
+        if (!Modifier.isPublic(field.getModifiers())
+                || !Modifier.isStatic(field.getModifiers())) {
+            throw new ELException("Failed to resolve static field '%s'".formatted(name));
+        }
+
+        return field;
     }
 }
