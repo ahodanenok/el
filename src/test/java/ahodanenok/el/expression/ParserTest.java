@@ -848,8 +848,8 @@ public class ParserTest {
     public void testParse_PropertyAccess_Dot(String code) {
         Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         PropertyAccessValueExpression prop = assertInstanceOf(PropertyAccessValueExpression.class, parser.parseValue());
-        assertEquals("x", assertInstanceOf(IdentifierValueExpression.class, prop.left).name);
-        assertEquals("y", assertInstanceOf(StaticValueExpression.class, prop.right).value);
+        assertEquals("x", assertInstanceOf(IdentifierValueExpression.class, prop.baseExpr).name);
+        assertEquals("y", assertInstanceOf(StaticValueExpression.class, prop.propertyExpr).value);
     }
 
     @ParameterizedTest
@@ -860,8 +860,8 @@ public class ParserTest {
     public void testParse_PropertyAccess_Brackets(String code) {
         Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
         PropertyAccessValueExpression prop = assertInstanceOf(PropertyAccessValueExpression.class, parser.parseValue());
-        assertEquals("x", assertInstanceOf(IdentifierValueExpression.class, prop.left).name);
-        AddValueExpression add = assertInstanceOf(AddValueExpression.class, prop.right);
+        assertEquals("x", assertInstanceOf(IdentifierValueExpression.class, prop.baseExpr).name);
+        AddValueExpression add = assertInstanceOf(AddValueExpression.class, prop.propertyExpr);
         assertEquals("y", assertInstanceOf(IdentifierValueExpression.class, add.left).name);
         assertEquals(1L, assertInstanceOf(StaticValueExpression.class, add.right).value);
     }
@@ -875,14 +875,14 @@ public class ParserTest {
         Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         PropertyAccessValueExpression prop_1 = assertInstanceOf(PropertyAccessValueExpression.class, parser.parseValue());
-        assertEquals("d", assertInstanceOf(StaticValueExpression.class, prop_1.right).value);
+        assertEquals("d", assertInstanceOf(StaticValueExpression.class, prop_1.propertyExpr).value);
 
-        PropertyAccessValueExpression prop_2 = assertInstanceOf(PropertyAccessValueExpression.class, prop_1.left);
-        assertEquals("c", assertInstanceOf(StaticValueExpression.class, prop_2.right).value);
+        PropertyAccessValueExpression prop_2 = assertInstanceOf(PropertyAccessValueExpression.class, prop_1.baseExpr);
+        assertEquals("c", assertInstanceOf(StaticValueExpression.class, prop_2.propertyExpr).value);
 
-        PropertyAccessValueExpression prop_3 = assertInstanceOf(PropertyAccessValueExpression.class, prop_2.left);
-        assertEquals("a", assertInstanceOf(IdentifierValueExpression.class, prop_3.left).name);
-        assertEquals("b", assertInstanceOf(StaticValueExpression.class, prop_3.right).value);
+        PropertyAccessValueExpression prop_3 = assertInstanceOf(PropertyAccessValueExpression.class, prop_2.baseExpr);
+        assertEquals("a", assertInstanceOf(IdentifierValueExpression.class, prop_3.baseExpr).name);
+        assertEquals("b", assertInstanceOf(StaticValueExpression.class, prop_3.propertyExpr).value);
     }
 
     @ParameterizedTest
@@ -894,16 +894,16 @@ public class ParserTest {
         Parser parser = new Parser(new Tokenizer(new StringReader(code)), new StandardELContext(ExpressionFactoryStubs.NONE));
 
         PropertyAccessValueExpression prop_1 = assertInstanceOf(PropertyAccessValueExpression.class, parser.parseValue());
-        assertEquals("d", assertInstanceOf(StaticValueExpression.class, prop_1.right).value);
+        assertEquals("d", assertInstanceOf(StaticValueExpression.class, prop_1.propertyExpr).value);
 
-        PropertyAccessValueExpression prop_2 = assertInstanceOf(PropertyAccessValueExpression.class, prop_1.left);
-        AddValueExpression add = assertInstanceOf(AddValueExpression.class, prop_2.right);
+        PropertyAccessValueExpression prop_2 = assertInstanceOf(PropertyAccessValueExpression.class, prop_1.baseExpr);
+        AddValueExpression add = assertInstanceOf(AddValueExpression.class, prop_2.propertyExpr);
         assertEquals("c", assertInstanceOf(IdentifierValueExpression.class, add.left).name);
         assertEquals(1L, assertInstanceOf(StaticValueExpression.class, add.right).value);
 
-        PropertyAccessValueExpression prop_3 = assertInstanceOf(PropertyAccessValueExpression.class, prop_2.left);
-        assertEquals("a", assertInstanceOf(IdentifierValueExpression.class, prop_3.left).name);
-        assertEquals(0L, assertInstanceOf(StaticValueExpression.class, prop_3.right).value);
+        PropertyAccessValueExpression prop_3 = assertInstanceOf(PropertyAccessValueExpression.class, prop_2.baseExpr);
+        assertEquals("a", assertInstanceOf(IdentifierValueExpression.class, prop_3.baseExpr).name);
+        assertEquals(0L, assertInstanceOf(StaticValueExpression.class, prop_3.propertyExpr).value);
     }
 
     @ParameterizedTest
@@ -1009,7 +1009,7 @@ public class ParserTest {
         assertEquals("a", call.localName);
         assertNull(call.variableExpr);
         assertNull(call.function);
-        assertNull(call.method);
+        assertNull(call.mappedMethod);
         assertEquals(2, call.args.size());
         AddValueExpression add = assertInstanceOf(AddValueExpression.class, call.args.get(0));
         assertEquals("b", assertInstanceOf(IdentifierValueExpression.class, add.left).name);
@@ -1051,7 +1051,7 @@ public class ParserTest {
         assertEquals("max", call.localName);
         assertNull(call.variableExpr);
         assertNull(call.function);
-        assertEquals(Math.class.getMethod("max", long.class, long.class), call.method);
+        assertEquals(Math.class.getMethod("max", long.class, long.class), call.mappedMethod);
         assertEquals(2, call.args.size());
         assertEquals(1L, assertInstanceOf(StaticValueExpression.class, call.args.get(0)).value);
         assertEquals(2L, assertInstanceOf(StaticValueExpression.class, call.args.get(1)).value);
@@ -1069,7 +1069,7 @@ public class ParserTest {
         assertNull(call_1.prefix);
         assertNull(call_1.localName);
         assertNull(call_1.variableExpr);
-        assertNull(call_1.method);
+        assertNull(call_1.mappedMethod);
         assertEquals(3, call_1.args.size());
         assertEquals(true, assertInstanceOf(StaticValueExpression.class, call_1.args.get(0)).value);
         assertEquals(10L, assertInstanceOf(StaticValueExpression.class, call_1.args.get(1)).value);
@@ -1079,14 +1079,14 @@ public class ParserTest {
         assertNull(call_2.prefix);
         assertNull(call_2.localName);
         assertNull(call_2.variableExpr);
-        assertNull(call_2.method);
+        assertNull(call_2.mappedMethod);
         assertEquals(0, call_2.args.size());
 
         FunctionCallValueExpression call_3 = assertInstanceOf(FunctionCallValueExpression.class, call_2.function);
         assertNull(call_3.prefix);
         assertEquals("a", call_3.localName);
         assertNull(call_3.function);
-        assertNull(call_3.method);
+        assertNull(call_3.mappedMethod);
         assertEquals(2, call_3.args.size());
         AddValueExpression add = assertInstanceOf(AddValueExpression.class, call_3.args.get(0));
         assertEquals("b", assertInstanceOf(IdentifierValueExpression.class, add.left).name);

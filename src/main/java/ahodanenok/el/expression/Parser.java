@@ -242,13 +242,19 @@ public class Parser {
     private ValueExpressionBase property() {
         ValueExpressionBase expr = base();
         while (true) {
+            // todo: make better
+            String propertyName;
             ValueExpressionBase propertyExpr;
+            boolean dot = false;
             if (match(TokenType.SQUARE_LEFT)) {
+                propertyName = null;
                 propertyExpr = expression();
                 expect(TokenType.SQUARE_RIGHT);
             } else if (match(TokenType.DOT)) {
                 Token id = expect(TokenType.IDENTIFIER);
+                propertyName = id.getLexeme();
                 propertyExpr = new StaticValueExpression(id.getLexeme());
+                dot = true;
             } else {
                 break;
             }
@@ -261,9 +267,9 @@ public class Parser {
                     } while (match(TokenType.COMMA));
                     expect(TokenType.PAREN_RIGHT);
                 }
-                expr = new PropertyCallValueExpression(expr, propertyExpr, params);
+                expr = new PropertyCallValueExpression(expr, propertyExpr, params, dot);
             } else {
-                expr = new PropertyAccessValueExpression(expr, propertyExpr);
+                expr = new PropertyAccessValueExpression(expr, propertyName, propertyExpr);
             }
         }
 

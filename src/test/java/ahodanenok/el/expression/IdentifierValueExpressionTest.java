@@ -15,6 +15,7 @@ import ahodanenok.el.utils.StubELContext;
 import ahodanenok.el.utils.StubELResolver;
 import jakarta.el.ELContext;
 import jakarta.el.ELException;
+import jakarta.el.PropertyNotWritableException;
 import jakarta.el.StandardELContext;
 import jakarta.el.ValueReference;
 
@@ -55,8 +56,8 @@ public class IdentifierValueExpressionTest {
     public void testELResolver() {
         StandardELContext context = new StandardELContext(ExpressionFactoryStubs.NONE);
         var expr = new IdentifierValueExpression("x", null);
-        assertThrows(ELException.class, () -> expr.getValue(context));
-        assertThrows(ELException.class, () -> expr.isReadOnly(context));
+        assertNull(expr.getValue(context));
+        assertTrue(expr.isReadOnly(context));
         assertDoesNotThrow(() -> expr.setValue(context, 100));
         assertTrue(context.isPropertyResolved());
         assertEquals(Integer.valueOf(100), expr.getValue(context));
@@ -72,10 +73,10 @@ public class IdentifierValueExpressionTest {
             "ahodanenok.el.expression.IdentifierValueExpressionTest$Statics.f1");
         var expr = new IdentifierValueExpression("f1", null);
         assertEquals("100", expr.getValue(context));
-        assertFalse(expr.isReadOnly(context));
-        assertEquals(String.class, expr.getType(context));
-        assertDoesNotThrow(() -> expr.setValue(context, "123"));
-        assertEquals("123", expr.getValue(context));
+        assertTrue(expr.isReadOnly(context));
+        assertNull(expr.getType(context));
+        assertThrows(PropertyNotWritableException.class, () -> expr.setValue(context, "123"));
+        assertEquals("100", expr.getValue(context));
     }
 
     @Test
@@ -87,8 +88,7 @@ public class IdentifierValueExpressionTest {
         assertEquals("200", expr.getValue(context));
         assertTrue(expr.isReadOnly(context));
         assertNull(expr.getType(context));
-        ELException e = assertThrows(ELException.class, () -> expr.setValue(context, "234"));
-        assertEquals("Static field 'ahodanenok.el.expression.IdentifierValueExpressionTest$Statics.f2' is read-only", e.getMessage());
+        assertThrows(PropertyNotWritableException.class, () -> expr.setValue(context, "234"));
         assertEquals("200", expr.getValue(context));
     }
 
@@ -98,10 +98,10 @@ public class IdentifierValueExpressionTest {
         context.getImportHandler().importStatic(
             "ahodanenok.el.expression.IdentifierValueExpressionTest$Statics.f3");
         var expr = new IdentifierValueExpression("f3", null);
-        assertEquals("Failed to resolve static field 'f3'", assertThrows(ELException.class, () -> expr.getValue(context)).getMessage());
-        assertEquals("Failed to resolve static field 'f3'", assertThrows(ELException.class, () -> expr.isReadOnly(context)).getMessage());
-        assertEquals("Failed to resolve static field 'f3'", assertThrows(ELException.class, () -> expr.getType(context)).getMessage());
-        assertEquals("Failed to resolve static field 'f3'", assertThrows(ELException.class, () -> expr.setValue(context, "345")).getMessage());
+        assertNull(expr.getValue(context));
+        assertTrue(expr.isReadOnly(context));
+        assertNull(expr.getType(context));
+        assertThrows(PropertyNotWritableException.class, () -> expr.setValue(context, "345"));
     }
 
     @Test
@@ -110,10 +110,10 @@ public class IdentifierValueExpressionTest {
         context.getImportHandler().importStatic(
             "ahodanenok.el.expression.IdentifierValueExpressionTest$Statics.f4");
         var expr = new IdentifierValueExpression("f4", null);
-        assertEquals("Failed to resolve static field 'f4'", assertThrows(ELException.class, () -> expr.getValue(context)).getMessage());
-        assertEquals("Failed to resolve static field 'f4'", assertThrows(ELException.class, () -> expr.isReadOnly(context)).getMessage());
-        assertEquals("Failed to resolve static field 'f4'", assertThrows(ELException.class, () -> expr.getType(context)).getMessage());
-        assertEquals("Failed to resolve static field 'f4'", assertThrows(ELException.class, () -> expr.setValue(context, "456")).getMessage());
+        assertNull(expr.getValue(context));
+        assertTrue(expr.isReadOnly(context));
+        assertNull(expr.getType(context));
+        assertThrows(PropertyNotWritableException.class, () -> expr.setValue(context, "456"));
     }
 
     public static class Statics {

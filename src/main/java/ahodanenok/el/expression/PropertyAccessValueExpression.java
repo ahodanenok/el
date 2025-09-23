@@ -1,5 +1,7 @@
 package ahodanenok.el.expression;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Objects;
 
 import jakarta.el.ELContext;
@@ -11,12 +13,14 @@ import jakarta.el.ValueReference;
 
 class PropertyAccessValueExpression extends ValueExpressionBase {
 
-    final ValueExpression left;
-    final ValueExpression right;
+    final ValueExpression baseExpr;
+    final String propertyName;
+    final ValueExpression propertyExpr;
 
-    PropertyAccessValueExpression(ValueExpression left, ValueExpression right) {
-        this.left = left;
-        this.right = right;
+    PropertyAccessValueExpression(ValueExpression baseExpr, String propertyName, ValueExpression propertyExpr) {
+        this.baseExpr = baseExpr;
+        this.propertyName = propertyName;
+        this.propertyExpr = propertyExpr;
     }
 
     @Override
@@ -33,41 +37,71 @@ class PropertyAccessValueExpression extends ValueExpressionBase {
 
     private Object getValueInternal(ELContext context) {
         ValueReference ref = resolveProperty(context);
-        if (ref == null) {
-            return null;
+        if (ref != null) {
+            Object value = context.getELResolver().getValue(context, ref.getBase(), ref.getProperty());
+            if (context.isPropertyResolved()) {
+                return value;
+            }
         }
 
-        return context.getELResolver().getValue(context, ref.getBase(), ref.getProperty());
+System.out.println("!!! %s - %s".formatted(baseExpr, propertyName));
+        if (baseExpr instanceof IdentifierValueExpression baseId && propertyName != null) {
+
+            Field field = resolveStaticField(context, baseId.name);
+System.out.println("!!! field=" + field);
+            try {
+                return field.get(null);
+            } catch (Exception e) {
+                throw new ELException("Failed to get value from static field '%s'".formatted(field), e);
+            }
+        }
+
+        return null;
     }
 
     @Override
     public boolean isReadOnly(ELContext context) {
         ValueReference ref = resolveProperty(context);
-        if (ref == null) {
-            return true;
+        if (ref != null) {
+            boolean readOnly = context.getELResolver().isReadOnly(context, ref.getBase(), ref.getProperty());
+            if (context.isPropertyResolved()) {
+                return readOnly;
+            }
         }
 
-        return context.getELResolver().isReadOnly(context, ref.getBase(), ref.getProperty());
+        return true;
     }
 
     @Override
     public Class<?> getType(ELContext context) {
         ValueReference ref = resolveProperty(context);
-        if (ref == null) {
-            return null;
+        if (ref != null) {
+            Class<?> type = context.getELResolver().getType(context, ref.getBase(), ref.getProperty());
+            if (context.isPropertyResolved()) {
+                return type;
+            }
         }
 
-        return context.getELResolver().getType(context, ref.getBase(), ref.getProperty());
+        return null;
     }
 
     @Override
     public void setValue(ELContext context, Object value) {
         ValueReference ref = resolveProperty(context);
-        if (ref == null) {
-            throw new PropertyNotWritableException();
+        if (ref != null) {
+            context.getELResolver().setValue(context, ref.getBase(), ref.getProperty(), value);
+            if (context.isPropertyResolved()) {
+                return;
+            }
         }
 
-        context.getELResolver().setValue(context, ref.getBase(), ref.getProperty(), value);
+        if (baseExpr instanceof IdentifierValueExpression baseId && propertyName != null) {
+            resolveStaticField(context, baseId.name);
+            throw new PropertyNotWritableException("Static fields are not writeable");
+        }
+
+        // todo: better error message
+        throw new PropertyNotFoundException("Property not found");
     }
 
     @Override
@@ -81,12 +115,12 @@ class PropertyAccessValueExpression extends ValueExpressionBase {
     }
 
     private ValueReference resolveProperty(ELContext context) {
-        Object base = left.getValue(context);
+        Object base = baseExpr.getValue(context);
         if (base == null) {
             return null;
         }
 
-        Object property = right.getValue(context);
+        Object property = propertyExpr.getValue(context);
         if (property == null) {
             return null;
         }
@@ -94,9 +128,31 @@ class PropertyAccessValueExpression extends ValueExpressionBase {
         return new ValueReference(base, property);
     }
 
+    private Field resolveStaticField(ELContext context, String className) {
+        Class<?> resolvedClass = context.getImportHandler().resolveClass(className);
+
+        Field field = null;
+        if (resolvedClass != null) {
+            try {
+                field = resolvedClass.getField(propertyName);
+            } catch (NoSuchFieldException e) {
+                // it's okay
+                field = null;
+            }
+        }
+
+        if (field == null
+                || !Modifier.isPublic(field.getModifiers())
+                || !Modifier.isStatic(field.getModifiers())) {
+            throw new ELException("Property '%s.%s' wasn't resolved".formatted(className, propertyName));
+        }
+
+        return field;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(left, right);
+        return Objects.hash(baseExpr, propertyName, propertyExpr);
     }
 
     @Override
@@ -106,6 +162,8 @@ class PropertyAccessValueExpression extends ValueExpressionBase {
         }
 
         PropertyAccessValueExpression other = (PropertyAccessValueExpression) obj;
-        return left.equals(other.left) && right.equals(other.right);
+        return baseExpr.equals(other.baseExpr)
+            && Objects.equals(propertyName, other.propertyName)
+            && propertyExpr.equals(other.propertyExpr);
     }
 }
