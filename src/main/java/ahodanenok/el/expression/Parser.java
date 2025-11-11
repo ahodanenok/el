@@ -10,6 +10,7 @@ import ahodanenok.el.token.Token;
 import ahodanenok.el.token.TokenType;
 import ahodanenok.el.token.Tokenizer;
 import jakarta.el.ELContext;
+import jakarta.el.ELException;
 import jakarta.el.ValueExpression;
 
 public class Parser {
@@ -21,6 +22,77 @@ public class Parser {
         this.tokenizer = new LookaheadTokenizer(tokenizer, 5);
         this.context = context;
     }
+
+    // start methods
+    public MethodExpressionBase parseMethod() {
+        if (!tokenizer.hasNext()) {
+            return null;
+        }
+
+        Token token = tokenizer.peek(1);
+        MethodExpressionBase expr = switch (token.getType()) {
+            case DOLLAR -> dollarMethod();
+            case HASH -> hashMethod();
+            default -> new StringMethodExpression(tokenizer.next().getValue());
+        };
+
+        if (tokenizer.hasNext()) {
+            throw new ELException("Unexpected token at the end: " + tokenizer.next());
+        }
+
+        return expr;
+    }
+
+    private MethodExpressionBase dollarMethod() {
+        expect(TokenType.DOLLAR);
+        expect(TokenType.CURLY_LEFT);
+        MethodExpressionBase expr = method();
+        expect(TokenType.CURLY_RIGHT);
+        return expr;
+    }
+
+    private MethodExpressionBase hashMethod() {
+        expect(TokenType.HASH);
+        expect(TokenType.CURLY_LEFT);
+        MethodExpressionBase expr = method();
+        expect(TokenType.CURLY_RIGHT);
+        return expr;
+    }
+
+    private MethodExpressionBase method() {
+        Token token = tokenizer.next();
+
+        ValueExpression mappedExpr;
+        if (context.getVariableMapper() != null) {
+            mappedExpr = context.getVariableMapper().resolveVariable(token.getLexeme());
+        } else {
+            mappedExpr = null;
+        }
+
+        return new IdentifierMethodExpression(new IdentifierValueExpression(token.getLexeme(), mappedExpr));
+    }
+
+    // private ValueExpressionBase identifierMethod() {
+    //     case IDENTIFIER -> {
+    //         if (match(COLON)) {
+    //             Token localName = expect(TokenType.IDENTIFIER);
+    //             expect(TokenType.PAREN_LEFT);
+    //             yield functionCall(token.getLexeme(), localName.getLexeme());
+    //         } else if (match(TokenType.PAREN_LEFT)) {
+    //             yield functionCall(null, token.getLexeme());
+    //         } else {
+    //             ValueExpression mappedExpr;
+    //             if (context.getVariableMapper() != null) {
+    //                 mappedExpr = context.getVariableMapper().resolveVariable(token.getLexeme());
+    //             } else {
+    //                 mappedExpr = null;
+    //             }
+
+    //             yield new IdentifierValueExpression(token.getLexeme(), mappedExpr);
+    //         }
+    //     }
+    // }
+    // end methods
 
     public ValueExpressionBase parseValue() {
         return composite();

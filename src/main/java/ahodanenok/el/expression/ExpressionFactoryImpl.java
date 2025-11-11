@@ -279,9 +279,16 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
     }
 
     @Override
-    public MethodExpression createMethodExpression(ELContext context, String arg1, Class<?> arg2, Class<?>[] arg3) {
-        // TODO Auto-generated method stub
-        return null;
+    public MethodExpression createMethodExpression(ELContext context, String expression, Class<?> expectedReturnType, Class<?>[] expectedParamTypes) {
+        Tokenizer tokenizer = new Tokenizer(new StringReader(expression));
+        Parser parser = new Parser(tokenizer, context);
+
+        MethodExpressionBase expr = parser.parseMethod();
+        expr.expressionString = expression;
+        expr.expectedReturnType = expectedReturnType;
+        expr.expectedParamTypes = expectedParamTypes;
+
+        return expr;
     }
 
     @Override
