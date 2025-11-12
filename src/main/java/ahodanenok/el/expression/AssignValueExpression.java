@@ -35,9 +35,11 @@ class AssignValueExpression extends ValueExpressionBase {
         if (left instanceof IdentifierValueExpression id) {
             if (context.isLambdaArgument(id.name)) {
                 throw new PropertyNotWritableException("Identifier '%s' is a lambda argument".formatted(id.name));
+            } else if (id.varExpr != null) {
+                ref = id.varExpr.getValueReference(context);
+            } else {
+                ref = new ValueReference(null, id.name);
             }
-
-            ref = id.varExpr.getValueReference(context);
         } else {
             ref = left.getValueReference(context);
         }
