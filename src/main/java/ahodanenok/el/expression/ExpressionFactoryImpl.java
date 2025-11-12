@@ -283,7 +283,12 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
         Tokenizer tokenizer = new Tokenizer(new StringReader(expression));
         Parser parser = new Parser(tokenizer, context);
 
-        MethodExpressionBase expr = parser.parseMethod();
+        MethodExpressionBase expr;
+        try {
+            expr = parser.parseMethod();
+        } catch (Exception e) {
+            throw new ELException("Failed to parse method expression", e);
+        }
         expr.expressionString = expression;
         expr.expectedReturnType = expectedReturnType;
         expr.expectedParamTypes = expectedParamTypes;
@@ -303,7 +308,12 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
         Tokenizer tokenizer = new Tokenizer(new StringReader(expression));
         Parser parser = new Parser(tokenizer, context);
 
-        ValueExpressionBase expr = parser.parseValue();
+        ValueExpressionBase expr;
+        try {
+            expr = parser.parseValue();
+        } catch (Exception e) {
+            throw new ELException("Failed to parse value expression", e);
+        }
         expr.expressionString = expression;
         expr.expectedType = expectedType;
 
