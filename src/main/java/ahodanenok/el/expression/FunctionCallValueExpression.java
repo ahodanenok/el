@@ -1,6 +1,7 @@
 package ahodanenok.el.expression;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -70,9 +71,17 @@ class FunctionCallValueExpression extends ValueExpressionBase {
         }
 
         if (functionObj instanceof LambdaExpression lambda) {
-            return lambda.invoke(context, evaluateArgs(context));
+            return lambda.invoke(context, evaluateArgs(context, null));
         } else if (mappedMethod != null) {
-            return mappedMethod.invoke(null, evaluateArgs(context));
+            try {
+                return mappedMethod.invoke(null, evaluateArgs(context, mappedMethod.getParameterTypes()));
+            } catch (InvocationTargetException e) {
+                if (e.getCause() != null) {
+                    throw new ELException("Failed to invoke method", e.getCause());
+                } else {
+                    throw e;
+                }
+            }
         } else if (functionObj != null) {
             throw new ELException("Object of type '%s' can't be invoked as function"
                 .formatted(functionObj.getClass().getName()));
@@ -92,7 +101,7 @@ class FunctionCallValueExpression extends ValueExpressionBase {
                     }
                 }
 
-                Object[] args = evaluateArgs(context);
+                Object[] args = evaluateArgs(context, null);
                 Constructor<?> constructor;
                 if (candidateConstructors.size() == 1) {
                     constructor = candidateConstructors.get(0);
@@ -128,7 +137,7 @@ class FunctionCallValueExpression extends ValueExpressionBase {
                     }
                 }
 
-                Object[] args = evaluateArgs(context);
+                Object[] args = evaluateArgs(context, null);
                 Method method;
                 if (candidateMethods.size() == 1) {
                     method = candidateMethods.get(0);
@@ -157,10 +166,14 @@ class FunctionCallValueExpression extends ValueExpressionBase {
             .formatted(prefix != null ? prefix + ":" + localName : localName));
     }
 
-    private Object[] evaluateArgs(ELContext context) {
+    private Object[] evaluateArgs(ELContext context, Class<?>[] expectedTypes) {
         Object[] values = new Object[args.size()];
         for (int i = 0; i < args.size(); i++) {
-            values[i] = args.get(i).getValue(context);
+            Object value = args.get(i).getValue(context);
+            if (expectedTypes != null) {
+                value = context.convertToType(value, expectedTypes[i]);
+            }
+            values[i] = value;
         }
 
         return values;
