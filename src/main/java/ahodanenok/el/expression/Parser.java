@@ -103,15 +103,29 @@ public class Parser {
             return null;
         }
 
-        // todo: collect all
-        // List<ValueExpressionBase> expressions = new ArrayList<>();
-
         Token token = tokenizer.peek(1);
-        return switch (token.getType()) {
+        ValueExpressionBase expr =  switch (token.getType()) {
             case DOLLAR -> dollarExpression();
             case HASH -> hashExpression();
             default -> literal();
         };
+
+        if (!tokenizer.hasNext()) {
+            return expr;
+        }
+
+        List<ValueExpression> expressions = new ArrayList<>();
+        expressions.add(expr);
+        while (tokenizer.hasNext()) {
+            token = tokenizer.peek(1);
+            expressions.add(switch (token.getType()) {
+                case DOLLAR -> dollarExpression();
+                case HASH -> hashExpression();
+                default -> literal();
+            });
+        }
+
+        return new CompositeValueExpression(expressions);
     }
 
     private ValueExpressionBase dollarExpression() {
