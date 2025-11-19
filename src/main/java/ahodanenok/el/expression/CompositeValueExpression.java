@@ -4,13 +4,12 @@ import java.util.List;
 
 import jakarta.el.ELContext;
 import jakarta.el.ELException;
-import jakarta.el.ValueExpression;
 
 class CompositeValueExpression extends ValueExpressionBase {
 
-    final List<ValueExpression> expressions;
+    final List<ValueExpressionBase> expressions;
 
-    CompositeValueExpression(List<ValueExpression> expressions) {
+    CompositeValueExpression(List<ValueExpressionBase> expressions) {
         this.expressions = expressions;
     }
 

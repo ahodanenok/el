@@ -103,26 +103,37 @@ public class Parser {
             return null;
         }
 
-        Token token = tokenizer.peek(1);
-        ValueExpressionBase expr =  switch (token.getType()) {
-            case DOLLAR -> dollarExpression();
-            case HASH -> hashExpression();
-            default -> literal();
-        };
+        TokenType lastMarker = null;
+        List<ValueExpressionBase> expressions = new ArrayList<>();
+        while (true) {
+            ValueExpressionBase literal = literal();
+            if (literal != null) {
+                expressions.add(literal);
+            }
 
-        if (!tokenizer.hasNext()) {
-            return expr;
-        }
+            if (!tokenizer.hasNext()) {
+                break;
+            }
 
-        List<ValueExpression> expressions = new ArrayList<>();
-        expressions.add(expr);
-        while (tokenizer.hasNext()) {
-            token = tokenizer.peek(1);
+            Token token = tokenizer.peek(1);
+            if (token.getType() == TokenType.DOLLAR || token.getType() == TokenType.HASH) {
+                if (lastMarker != null && lastMarker != token.getType()) {
+                    throw new ELException("Mixing ${} and #{} expressions in one composite statement is not allowed");
+                }
+
+                lastMarker = token.getType();
+            }
+
             expressions.add(switch (token.getType()) {
                 case DOLLAR -> dollarExpression();
                 case HASH -> hashExpression();
-                default -> literal();
+                default -> throw new ELException("Unexpected input"); // todo: error message
             });
+        }
+
+        // todo: if empty?
+        if (expressions.size() == 1) {
+            return expressions.get(0);
         }
 
         return new CompositeValueExpression(expressions);
@@ -431,12 +442,12 @@ public class Parser {
     }
 
     private ValueExpressionBase literal() {
-        Token token = tokenizer.next();
-        if (token.getType() == TokenType.STRING) {
-            return new StaticValueExpression(token.getValue());
-        } else {
-            return new StaticValueExpression(token.getLexeme());
+        String literal = tokenizer.readLiteral();
+        if (literal.isEmpty()) {
+            return null;
         }
+
+        return new StaticValueExpression(literal);
     }
 
     private Token expect(TokenType tokenType) {

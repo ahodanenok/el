@@ -43,4 +43,12 @@ public class LookaheadTokenizer {
 
         return tokensPending.get(lookahead - 1);
     }
+
+    public String readLiteral() {
+        if (!tokensPending.isEmpty()) {
+            throw new IllegalStateException("Pending tokens must be process before reading literally");
+        }
+
+        return tokenizer.readLiteral();
+    }
 }

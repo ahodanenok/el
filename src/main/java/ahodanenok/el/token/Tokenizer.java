@@ -71,6 +71,14 @@ public class Tokenizer implements Iterator<Token> {
         return token;
     }
 
+    public String readLiteral() {
+        try {
+            return readLiteralInternal();
+        } catch (IOException e) {
+            throw new IllegalStateException(e); // todo: what exception to throw?
+        }
+    }
+
     private Token readNext() throws IOException {
         skipWhitespaces();
         while (true) {
@@ -314,6 +322,33 @@ public class Tokenizer implements Iterator<Token> {
                     "Integer literal '%s' is too large".formatted(lexeme));
             }
         }
+    }
+
+    private String readLiteralInternal() throws IOException {
+        // todo: use a single instance of buffer for all operations?
+        StringBuilder buf = new StringBuilder();
+        int ch;
+        while ((ch = reader.read()) != -1) {
+            if (ch == '#' || ch == '$') {
+                reader.unread(ch);
+                break;
+            } else if (ch == '\\') {
+                if (match('\\')) {
+                    buf.append('\\');
+                } else if (match('#')) {
+                    buf.append('#');
+                } else if (match('$')) {
+                    buf.append('$');
+                } else {
+                    throw new IllegalStateException(
+                        "Unsupported escape sequence '%c%c'".formatted(ch, peekChar()));
+                }
+            } else {
+                buf.append((char) ch);
+            }
+        }
+
+        return buf.toString();
     }
 
     private Token readStringToken() throws IOException {
