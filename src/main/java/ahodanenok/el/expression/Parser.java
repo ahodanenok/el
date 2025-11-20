@@ -29,18 +29,30 @@ public class Parser {
             return null;
         }
 
-        Token token = tokenizer.peek(1);
-        MethodExpressionBase expr = switch (token.getType()) {
-            case DOLLAR -> dollarMethod();
-            case HASH -> hashMethod();
-            default -> new StringMethodExpression(tokenizer.next().getValue());
-        };
+        MethodExpressionBase expr = literalMethod();
+        if (expr == null) {
+            Token token = tokenizer.peek(1);
+            expr = switch (token.getType()) {
+                case DOLLAR -> dollarMethod();
+                case HASH -> hashMethod();
+                default -> throw new ELException("Unexpected input"); // todo: error message
+            };
+        }
 
         if (tokenizer.hasNext()) {
             throw new ELException("Unexpected token at the end: " + tokenizer.next());
         }
 
         return expr;
+    }
+
+    private MethodExpressionBase literalMethod() {
+        String literal = tokenizer.readLiteral();
+        if (literal.isEmpty()) {
+            return null;
+        }
+
+        return new StringMethodExpression(literal);
     }
 
     private MethodExpressionBase dollarMethod() {
