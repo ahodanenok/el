@@ -1,6 +1,8 @@
 package ahodanenok.el.expression;
 
 import static ahodanenok.el.token.TokenType.COLON;
+import static ahodanenok.el.token.TokenType.IDENTIFIER;
+import static ahodanenok.el.token.TokenType.PAREN_LEFT;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -143,6 +145,10 @@ public class Parser {
             });
         }
 
+        if (tokenizer.hasNext()) {
+            throw new ELException("Unexpected input: " + tokenizer.next());
+        }
+
         // todo: if empty?
         if (expressions.size() == 1) {
             return expressions.get(0);
@@ -186,10 +192,20 @@ public class Parser {
     }
 
     private ValueExpressionBase assignment() {
-        ValueExpressionBase expr = lambda();
+        ValueExpressionBase expr = callChain();
         if (match(TokenType.EQUAL)) {
             // todo: validate left side is an lvalue expression
             expr = new AssignValueExpression(expr, assignment());
+        }
+
+        return expr;
+    }
+
+    private ValueExpressionBase callChain() {
+        ValueExpressionBase expr = lambda();
+        while (match(TokenType.PAREN_LEFT)) {
+            expr = new FunctionCallValueExpression(expr, args());
+            expect(TokenType.PAREN_RIGHT);
         }
 
         return expr;
@@ -200,7 +216,7 @@ public class Parser {
             Token param = tokenizer.next();
             expect(TokenType.ARROW);
 
-            return new LambdaValueExpression(List.of(param.getLexeme()), expression());
+            return new LambdaValueExpression(List.of(param.getLexeme()), lambda());
         } else if (peek(TokenType.PAREN_LEFT, TokenType.PAREN_RIGHT, TokenType.ARROW)
                 || peek(TokenType.PAREN_LEFT, TokenType.IDENTIFIER, TokenType.COMMA)
                 || peek(TokenType.PAREN_LEFT, TokenType.IDENTIFIER, TokenType.PAREN_RIGHT, TokenType.ARROW)) {
@@ -215,7 +231,7 @@ public class Parser {
             expect(TokenType.PAREN_RIGHT);
             expect(TokenType.ARROW);
 
-            return new LambdaValueExpression(params, expression());
+            return new LambdaValueExpression(params, lambda());
         } else {
             return conditional();
         }
@@ -394,7 +410,8 @@ public class Parser {
             case FLOAT -> new StaticValueExpression(token.getValue());
             case NULL -> new StaticValueExpression(token.getValue());
             case IDENTIFIER -> {
-                if (match(COLON)) {
+                if (peek(TokenType.COLON, TokenType.IDENTIFIER, TokenType.PAREN_LEFT)) {
+                    expect(TokenType.COLON);
                     Token localName = expect(TokenType.IDENTIFIER);
                     expect(TokenType.PAREN_LEFT);
                     yield functionCall(token.getLexeme(), localName.getLexeme());

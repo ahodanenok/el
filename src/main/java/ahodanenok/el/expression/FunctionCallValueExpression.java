@@ -56,7 +56,7 @@ class FunctionCallValueExpression extends ValueExpressionBase {
     private Object getValueInternal(ELContext context) throws Exception {
         Object functionObj = null;
         if (function != null) {
-            functionObj = this.function;
+            functionObj = function.getValue(context);
         } else if (prefix == null && mappedMethod == null) {
             if (context.isLambdaArgument(localName)) {
                 functionObj = context.getLambdaArgument(localName);
