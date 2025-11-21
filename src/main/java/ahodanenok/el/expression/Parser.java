@@ -443,7 +443,7 @@ public class Parser {
         FunctionCallValueExpression call = new FunctionCallValueExpression(
             prefix, localName,
             variableExpr,
-            context.getFunctionMapper().resolveFunction(prefix, localName),
+            context.getFunctionMapper().resolveFunction(prefix != null ? prefix : "", localName),
             args());
         expect(TokenType.PAREN_RIGHT);
 
