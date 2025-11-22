@@ -66,7 +66,25 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
             if (obj == null && !isPrimitiveType(targetType)) {
                 result = null;
             } else if (obj == null || obj.equals("")) {
-                result = 0; // todo: correct number type
+                if (toType == BigDecimal.class) {
+                    result = BigDecimal.ZERO;
+                } else if (toType == BigInteger.class) {
+                    result = BigInteger.ZERO;
+                } else if (toType == Double.class) {
+                    result = Double.valueOf(0.0);
+                } else if (toType == Float.class) {
+                    result = Float.valueOf(0.0f);
+                } else if (toType == Long.class) {
+                    result = Long.valueOf(0);
+                } else if (toType == Integer.class) {
+                    result = Integer.valueOf(0);
+                } else if (toType == Short.class) {
+                    result = Short.valueOf((short) 0);
+                } else if (toType == Byte.class) {
+                    result = Byte.valueOf((byte) 0);
+                } else {
+                    throw new ELException("Can't convert an empty string to type '%s'".formatted(toType.getName()));
+                }
             } else if (obj instanceof Character ch) {
                 result = Short.valueOf((short) ch.charValue());
             } else if (obj instanceof Boolean) {
