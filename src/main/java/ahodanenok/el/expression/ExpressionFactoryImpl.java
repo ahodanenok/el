@@ -4,6 +4,8 @@ import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
 import java.io.StringReader;
 import java.lang.reflect.Array;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Objects;
@@ -12,6 +14,7 @@ import ahodanenok.el.token.Tokenizer;
 import jakarta.el.ELContext;
 import jakarta.el.ELException;
 import jakarta.el.ExpressionFactory;
+import jakarta.el.LambdaExpression;
 import jakarta.el.MethodExpression;
 import jakarta.el.ValueExpression;
 
@@ -47,6 +50,7 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
         // If Y is of a primitive type, Let Y’ be the equivalent "boxed form" of Y
         // Otherwise, Let Y’ be the same as Y
         Class<?> toType = boxClass(targetType);
+
         // Apply the rules in Sections Section 1.25.2, “Coerce A to String” to Section 1.25.9, “Coerce A to Any Other Type T” for coercing X’ to Y’
         Object result;
         // 1.25.2. Coerce A to String
@@ -215,8 +219,13 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
             }
         }
         // 1.25.8. Coerce A to functional interface method invocation
-        // todo: impl
-
+        else if (toType.isAnnotationPresent(FunctionalInterface.class)
+                && obj instanceof LambdaExpression lambda) {
+            result = Proxy.newProxyInstance(
+                toType.getClassLoader(),
+                new Class[] { toType },
+                (p, m, args) -> lambda.invoke(args));
+        }
         // 1.25.9. Coerce A to Any Other Type T
         else  {
             if (obj == null) {

@@ -20,6 +20,7 @@ class LambdaValueExpression extends ValueExpressionBase {
 
     @Override
     public <T> T getValue(ELContext context) {
+        lambda.setELContext(context); // todo: create new?
         return convertIfNecessary(context, lambda);
     }
 
