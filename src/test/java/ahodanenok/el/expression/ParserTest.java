@@ -1167,4 +1167,38 @@ public class ParserTest {
         assertEquals("c", lambda3.params.get(1));
         assertEquals(true, assertInstanceOf(StaticValueExpression.class, lambda3.body).value);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${[]}",
+        "#{[]}",
+    })
+    public void testParseList_Empty(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)),
+            new StandardELContext(ExpressionFactoryStubs.NONE));
+        ListValueExpression list = assertInstanceOf(ListValueExpression.class, parser.parseValue());
+        assertEquals(0, list.expressions.size());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "${[1, true, 'x']}",
+        "#{[1, true, 'x']}",
+    })
+    public void testParseList_MultipleValues(String code) {
+        Parser parser = new Parser(new Tokenizer(new StringReader(code)),
+            new StandardELContext(ExpressionFactoryStubs.NONE));
+
+        ListValueExpression list = assertInstanceOf(ListValueExpression.class, parser.parseValue());
+        assertEquals(3, list.expressions.size());
+
+        StaticValueExpression expr1 = assertInstanceOf(StaticValueExpression.class, list.expressions.get(0));
+        assertEquals(1L, expr1.value);
+
+        StaticValueExpression expr2 = assertInstanceOf(StaticValueExpression.class, list.expressions.get(1));
+        assertEquals(true, expr2.value);
+
+        StaticValueExpression expr3 = assertInstanceOf(StaticValueExpression.class, list.expressions.get(2));
+        assertEquals("x", expr3.value);
+    }
 }

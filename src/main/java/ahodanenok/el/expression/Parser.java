@@ -428,6 +428,18 @@ public class Parser {
                     yield new IdentifierValueExpression(token.getLexeme(), mappedExpr);
                 }
             }
+            case SQUARE_LEFT -> {
+                List<ValueExpression> expressions = new ArrayList<>();
+                if (!peek(TokenType.SQUARE_RIGHT)) {
+                    expressions.add(expression());
+                }
+                while (!peek(TokenType.SQUARE_RIGHT)) {
+                    expect(TokenType.COMMA);
+                    expressions.add(expression());
+                }
+                expect(TokenType.SQUARE_RIGHT);
+                yield new ListValueExpression(expressions);
+            }
             default -> throw new IllegalStateException("Unexpected token: " + token.getType()); // todo: exception
         };
     }
