@@ -209,7 +209,7 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
                 int length = Array.getLength(obj);
                 Object array = Array.newInstance(toType.getComponentType(), length);
                 for (int i = 0; i < length; i++) {
-                    Array.set(array, i, coerceToTypeInternal(Array.get(obj, i), toType));
+                    Array.set(array, i, coerceToTypeInternal(Array.get(obj, i), toType.getComponentType()));
                 }
 
                 result = array;
