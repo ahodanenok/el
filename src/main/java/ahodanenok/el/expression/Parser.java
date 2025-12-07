@@ -488,7 +488,7 @@ public class Parser {
             return null;
         }
 
-        return new StaticValueExpression(literal);
+        return new LiteralTextValueExpression(literal);
     }
 
     private Token expect(TokenType tokenType) {

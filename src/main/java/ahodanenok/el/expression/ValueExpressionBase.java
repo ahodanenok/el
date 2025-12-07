@@ -35,8 +35,7 @@ public abstract class ValueExpressionBase extends ValueExpression {
     }
 
     @Override
-    public final boolean isLiteralText() {
-        // todo: what is it?
+    public boolean isLiteralText() {
         return false;
     }
 
