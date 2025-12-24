@@ -21,7 +21,7 @@ class AddValueExpression extends ValueExpressionBase {
     @Override
     public <T> T getValue(ELContext context) {
         try {
-            return getValueInternal(context);
+            return convertIfNecessary(context, getValueInternal(context));
         } catch (ELException e) {
             throw e;
         } catch (Exception e) {
