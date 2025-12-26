@@ -15,6 +15,7 @@ import ahodanenok.el.utils.StubELContext;
 import ahodanenok.el.utils.StubELResolver;
 import jakarta.el.ELContext;
 import jakarta.el.ELException;
+import jakarta.el.PropertyNotFoundException;
 import jakarta.el.PropertyNotWritableException;
 import jakarta.el.StandardELContext;
 import jakarta.el.ValueReference;
@@ -29,7 +30,7 @@ public class IdentifierValueExpressionTest {
         assertEquals(true, expr.isReadOnly(context));
         assertEquals(Integer.valueOf(1), expr.getValue(context));
         assertNull(expr.getType(context));
-        assertThrows(ELException.class, () -> expr.setValue(context, 2));
+        assertThrows(PropertyNotWritableException.class, () -> expr.setValue(context, 2));
         assertEquals(null, expr.getValueReference(context).getBase());
         assertEquals("x", expr.getValueReference(context).getProperty());
         context.exitLambdaScope();
@@ -38,30 +39,69 @@ public class IdentifierValueExpressionTest {
     @Test
     public void testVariable() {
         StandardELContext context = new StandardELContext(ExpressionFactoryStubs.NONE);
-        var expr = new IdentifierValueExpression("x", new StaticValueExpression(10) {
-            @Override
-            public ValueReference getValueReference(ELContext context) {
-                return new ValueReference("a", "b");
-            }
-        });
+        var expr = new IdentifierValueExpression("x", new StaticValueExpression(10));
         assertEquals(true, expr.isReadOnly(context));
         assertEquals(Integer.valueOf(10), expr.getValue(context));
         assertNull(expr.getType(context));
-        assertThrows(ELException.class, () -> expr.setValue(context, 11));
-        assertEquals("a", expr.getValueReference(context).getBase());
-        assertEquals("b", expr.getValueReference(context).getProperty());
+        assertThrows(PropertyNotWritableException.class, () -> expr.setValue(context, 11));
+        assertNull(expr.getValueReference(context));
     }
 
     @Test
     public void testELResolver() {
-        StandardELContext context = new StandardELContext(ExpressionFactoryStubs.NONE);
+        ELContext context = new StubELContext(new StubELResolver() {
+
+            Object value = 1;
+
+            @Override
+            public Class<?> getType(ELContext context, Object base, Object property) {
+                if (base == null && property.equals("x")) {
+                    context.setPropertyResolved(true);
+                    return Integer.class;
+                } else {
+                    context.setPropertyResolved(false);
+                    return null;
+                }
+            }
+
+            @Override
+            public Object getValue(ELContext context, Object base, Object property) {
+                if (base == null && property.equals("x")) {
+                    context.setPropertyResolved(true);
+                    return value;
+                } else {
+                    context.setPropertyResolved(false);
+                    return null;
+                }
+            }
+
+            @Override
+            public boolean isReadOnly(ELContext context, Object base, Object property) {
+                if (base == null && property.equals("x")) {
+                    context.setPropertyResolved(true);
+                    return false;
+                } else {
+                    context.setPropertyResolved(false);
+                    return true;
+                }
+            }
+
+            @Override
+            public void setValue(ELContext context, Object base, Object property, Object value) {
+                if (base == null && property.equals("x")) {
+                    context.setPropertyResolved(true);
+                    this.value = value;
+                } else {
+                    context.setPropertyResolved(false);
+                }
+            }
+        });
         var expr = new IdentifierValueExpression("x", null);
-        assertNull(expr.getValue(context));
-        assertTrue(expr.isReadOnly(context));
+        assertEquals(Integer.valueOf(1), expr.getValue(context));
+        assertFalse(expr.isReadOnly(context));
+        assertEquals(Integer.class, expr.getType(context));
         assertDoesNotThrow(() -> expr.setValue(context, 100));
-        assertTrue(context.isPropertyResolved());
         assertEquals(Integer.valueOf(100), expr.getValue(context));
-        assertTrue(context.isPropertyResolved());
         assertEquals(null, expr.getValueReference(context).getBase());
         assertEquals("x", expr.getValueReference(context).getProperty());
     }
@@ -98,10 +138,10 @@ public class IdentifierValueExpressionTest {
         context.getImportHandler().importStatic(
             "ahodanenok.el.expression.IdentifierValueExpressionTest$Statics.f3");
         var expr = new IdentifierValueExpression("f3", null);
-        assertNull(expr.getValue(context));
-        assertTrue(expr.isReadOnly(context));
-        assertNull(expr.getType(context));
-        assertThrows(PropertyNotWritableException.class, () -> expr.setValue(context, "345"));
+        assertThrows(PropertyNotFoundException.class, () -> expr.getValue(context));
+        assertThrows(PropertyNotFoundException.class, () -> expr.isReadOnly(context));
+        assertThrows(PropertyNotFoundException.class, () -> expr.getType(context));
+        assertThrows(PropertyNotFoundException.class, () -> expr.setValue(context, "345"));
     }
 
     @Test
@@ -110,10 +150,10 @@ public class IdentifierValueExpressionTest {
         context.getImportHandler().importStatic(
             "ahodanenok.el.expression.IdentifierValueExpressionTest$Statics.f4");
         var expr = new IdentifierValueExpression("f4", null);
-        assertNull(expr.getValue(context));
-        assertTrue(expr.isReadOnly(context));
-        assertNull(expr.getType(context));
-        assertThrows(PropertyNotWritableException.class, () -> expr.setValue(context, "456"));
+        assertThrows(PropertyNotFoundException.class, () -> expr.getValue(context));
+        assertThrows(PropertyNotFoundException.class, () -> expr.isReadOnly(context));
+        assertThrows(PropertyNotFoundException.class, () -> expr.getType(context));
+        assertThrows(PropertyNotFoundException.class, () -> expr.setValue(context, "456"));
     }
 
     public static class Statics {

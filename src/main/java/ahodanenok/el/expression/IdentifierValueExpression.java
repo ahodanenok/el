@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import jakarta.el.ELContext;
 import jakarta.el.ELException;
+import jakarta.el.PropertyNotFoundException;
 import jakarta.el.PropertyNotWritableException;
 import jakarta.el.ValueExpression;
 import jakarta.el.ValueReference;
@@ -32,7 +33,11 @@ public class IdentifierValueExpression extends ValueExpressionBase {
                 return type;
             }
 
-            return null;
+            if (resolveStaticField(context) != null) {
+                return null;
+            }
+
+            throw new PropertyNotFoundException(name);
         }
     }
 
@@ -48,7 +53,11 @@ public class IdentifierValueExpression extends ValueExpressionBase {
                 return readOnly;
             }
 
-            return true;
+            if (resolveStaticField(context) != null) {
+                return true;
+            }
+
+            throw new PropertyNotFoundException(name);
         }
     }
 
@@ -59,7 +68,7 @@ public class IdentifierValueExpression extends ValueExpressionBase {
         if (context.isLambdaArgument(name)) {
             value = context.getLambdaArgument(name);
         } else if (varExpr != null) {
-            return varExpr.getValue(context);
+            value = varExpr.getValue(context);
         } else {
             value = context.getELResolver().getValue(context, null, name);
             if (!context.isPropertyResolved()) {
@@ -72,7 +81,7 @@ public class IdentifierValueExpression extends ValueExpressionBase {
                             field.getDeclaringClass().getName(), field.getName()), e);
                     }
                 } else {
-                    value = null;
+                    throw new PropertyNotFoundException(name);
                 }
             }
         }
@@ -83,13 +92,17 @@ public class IdentifierValueExpression extends ValueExpressionBase {
     @Override
     public void setValue(ELContext context, Object value) {
         if (context.isLambdaArgument(name)) {
-            throw new ELException("'%s' is a lambda argument".formatted(name));
+            throw new PropertyNotWritableException("'%s' is a lambda argument".formatted(name));
         } else if (varExpr != null) {
             varExpr.setValue(context, value);
         } else {
             context.getELResolver().setValue(context, null, name, value);
             if (!context.isPropertyResolved()) {
-                throw new PropertyNotWritableException("todo");
+                if (resolveStaticField(context) != null) {
+                    throw new PropertyNotWritableException(name);
+                }
+
+                throw new PropertyNotFoundException(name);
             }
         }
     }
@@ -128,7 +141,6 @@ public class IdentifierValueExpression extends ValueExpressionBase {
         try {
             field = resolvedClass.getField(name);
         } catch (NoSuchFieldException e) {
-            // throw new ELException("Failed to resolve static field '%s'".formatted(name), e);
             return null;
         }
 
