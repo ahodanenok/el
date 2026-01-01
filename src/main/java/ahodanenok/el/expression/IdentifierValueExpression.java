@@ -13,6 +13,8 @@ import jakarta.el.ValueReference;
 
 public class IdentifierValueExpression extends ValueExpressionBase {
 
+    static final Object NOT_RESOLVED = new Object();
+
     final String name;
     final ValueExpression varExpr;
 
@@ -64,6 +66,15 @@ public class IdentifierValueExpression extends ValueExpressionBase {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getValue(ELContext context) {
+        Object value = tryGetValue(context);
+        if (value == NOT_RESOLVED) {
+            throw new PropertyNotFoundException(name);
+        }
+
+        return (T) convertIfNecessary(context, value);
+    }
+
+    Object tryGetValue(ELContext context) {
         Object value;
         if (context.isLambdaArgument(name)) {
             value = context.getLambdaArgument(name);
@@ -81,12 +92,12 @@ public class IdentifierValueExpression extends ValueExpressionBase {
                             field.getDeclaringClass().getName(), field.getName()), e);
                     }
                 } else {
-                    throw new PropertyNotFoundException(name);
+                    value = NOT_RESOLVED;
                 }
             }
         }
 
-        return (T) convertIfNecessary(context, value);
+        return value;
     }
 
     @Override
