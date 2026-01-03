@@ -75,15 +75,18 @@ public class Parser {
 
     private MethodExpressionBase method() {
         Token token = tokenizer.next();
+        if (token.getType() == TokenType.IDENTIFIER) {
+            ValueExpression mappedExpr;
+            if (context.getVariableMapper() != null) {
+                mappedExpr = context.getVariableMapper().resolveVariable(token.getLexeme());
+            } else {
+                mappedExpr = null;
+            }
 
-        ValueExpression mappedExpr;
-        if (context.getVariableMapper() != null) {
-            mappedExpr = context.getVariableMapper().resolveVariable(token.getLexeme());
+            return new IdentifierMethodExpression(new IdentifierValueExpression(token.getLexeme(), mappedExpr));
         } else {
-            mappedExpr = null;
+            throw new ELException("Unexpected token: " + token.getType()); // todo: exception
         }
-
-        return new IdentifierMethodExpression(new IdentifierValueExpression(token.getLexeme(), mappedExpr));
     }
 
     // private ValueExpressionBase identifierMethod() {
