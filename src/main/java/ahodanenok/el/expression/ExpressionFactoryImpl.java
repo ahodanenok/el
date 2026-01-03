@@ -22,7 +22,6 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
 
     @Override
     public <T> T coerceToType(Object obj, Class<T> targetType) {
-        Objects.requireNonNull(targetType);
         try {
             return (T) coerceToTypeInternal(obj, targetType);
         } catch (ELException e) {
