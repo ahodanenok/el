@@ -305,7 +305,13 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
     }
 
     @Override
-    public MethodExpression createMethodExpression(ELContext context, String expression, Class<?> expectedReturnType, Class<?>[] expectedParamTypes) {
+    public MethodExpression createMethodExpression(
+            ELContext context,
+            String expression,
+            Class<?> expectedReturnType,
+            Class<?>[] expectedParamTypes) {
+        Objects.requireNonNull(expectedParamTypes);
+
         Tokenizer tokenizer = new Tokenizer(new StringReader(expression));
         Parser parser = new Parser(tokenizer, context);
 
@@ -323,14 +329,19 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
     }
 
     @Override
-    public ValueExpression createValueExpression(Object instance, Class<?> expectedType) {
+    public ValueExpression createValueExpression(
+            Object instance, Class<?> expectedType) {
+        Objects.requireNonNull(expectedType);
         StaticValueExpression expr = new StaticValueExpression(instance);
         expr.expectedType = expectedType;
         return expr;
     }
 
     @Override
-    public ValueExpression createValueExpression(ELContext context, String expression, Class<?> expectedType) {
+    public ValueExpression createValueExpression(
+            ELContext context, String expression, Class<?> expectedType) {
+        Objects.requireNonNull(expectedType);
+
         Tokenizer tokenizer = new Tokenizer(new StringReader(expression));
         Parser parser = new Parser(tokenizer, context);
 
