@@ -367,34 +367,28 @@ public class Parser {
     private ValueExpressionBase property() {
         ValueExpressionBase expr = base();
         while (true) {
-            // todo: make better
-            String propertyName;
-            ValueExpressionBase propertyExpr;
-            boolean dot = false;
             if (match(TokenType.SQUARE_LEFT)) {
-                propertyName = null;
-                propertyExpr = expression();
+                ValueExpressionBase propertyExpr = expression();
                 expect(TokenType.SQUARE_RIGHT);
+                if (match(TokenType.PAREN_LEFT)) {
+                    List<ValueExpressionBase> args = args();
+                    expect(TokenType.PAREN_RIGHT);
+                    expr = new BracketsCallValueExpression(expr, propertyExpr, args);
+                } else {
+                    expr = new BracketsAccessValueExpression(expr, propertyExpr);
+                }
             } else if (match(TokenType.DOT)) {
                 Token id = expect(TokenType.IDENTIFIER);
-                propertyName = id.getLexeme();
-                propertyExpr = new StaticValueExpression(id.getLexeme());
-                dot = true;
+                List<ValueExpressionBase> args = null;
+                if (match(TokenType.PAREN_LEFT)) {
+                    args = args();
+                    expect(TokenType.PAREN_RIGHT);
+                    expr = new DotCallValueExpression(expr, id.getLexeme(), args);
+                } else {
+                    expr = new DotAccessValueExpression(expr, id.getLexeme());
+                }
             } else {
                 break;
-            }
-
-            if (match(TokenType.PAREN_LEFT)) {
-                List<ValueExpression> params = new ArrayList<>();
-                if (!match(TokenType.PAREN_RIGHT)) {
-                    do {
-                        params.add(expression());
-                    } while (match(TokenType.COMMA));
-                    expect(TokenType.PAREN_RIGHT);
-                }
-                expr = new PropertyCallValueExpression(expr, propertyExpr, params, dot);
-            } else {
-                expr = new PropertyAccessValueExpression(expr, propertyName, propertyExpr);
             }
         }
 
