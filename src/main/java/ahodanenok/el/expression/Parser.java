@@ -74,41 +74,21 @@ public class Parser {
     }
 
     private MethodExpressionBase method() {
-        Token token = tokenizer.next();
-        if (token.getType() == TokenType.IDENTIFIER) {
-            ValueExpression mappedExpr;
-            if (context.getVariableMapper() != null) {
-                mappedExpr = context.getVariableMapper().resolveVariable(token.getLexeme());
-            } else {
-                mappedExpr = null;
-            }
-
-            return new IdentifierMethodExpression(new IdentifierValueExpression(token.getLexeme(), mappedExpr));
+        ValueExpressionBase expr = property();
+        if (expr instanceof BracketsAccessValueExpression bracketsExpr) {
+            return new BracketsMethodExpression(bracketsExpr.baseExpr, bracketsExpr.propertyExpr, null);
+        } else if (expr instanceof BracketsCallValueExpression bracketsExpr) {
+            return new BracketsMethodExpression(bracketsExpr.baseExpr, bracketsExpr.propertyExpr, bracketsExpr.args);
+        } else if (expr instanceof DotAccessValueExpression dotExpr) {
+            return new DotMethodExpression(dotExpr.baseExpr, dotExpr.property, null);
+        } else if (expr instanceof DotCallValueExpression dotExpr) {
+            return new DotMethodExpression(dotExpr.baseExpr, dotExpr.methodName, dotExpr.args);
+        } else if (expr instanceof IdentifierValueExpression idExpr) {
+            return new IdentifierMethodExpression(idExpr);
         } else {
-            throw new ELException("Unexpected token: " + token.getType()); // todo: exception
+            throw new ELException();
         }
     }
-
-    // private ValueExpressionBase identifierMethod() {
-    //     case IDENTIFIER -> {
-    //         if (match(COLON)) {
-    //             Token localName = expect(TokenType.IDENTIFIER);
-    //             expect(TokenType.PAREN_LEFT);
-    //             yield functionCall(token.getLexeme(), localName.getLexeme());
-    //         } else if (match(TokenType.PAREN_LEFT)) {
-    //             yield functionCall(null, token.getLexeme());
-    //         } else {
-    //             ValueExpression mappedExpr;
-    //             if (context.getVariableMapper() != null) {
-    //                 mappedExpr = context.getVariableMapper().resolveVariable(token.getLexeme());
-    //             } else {
-    //                 mappedExpr = null;
-    //             }
-
-    //             yield new IdentifierValueExpression(token.getLexeme(), mappedExpr);
-    //         }
-    //     }
-    // }
     // end methods
 
     public ValueExpressionBase parseValue() {

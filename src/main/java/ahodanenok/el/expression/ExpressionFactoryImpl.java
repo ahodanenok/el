@@ -310,8 +310,6 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
             String expression,
             Class<?> expectedReturnType,
             Class<?>[] expectedParamTypes) {
-        Objects.requireNonNull(expectedParamTypes);
-
         Tokenizer tokenizer = new Tokenizer(new StringReader(expression));
         Parser parser = new Parser(tokenizer, context);
 
