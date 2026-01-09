@@ -4,16 +4,16 @@ import jakarta.el.ELContext;
 import jakarta.el.ELException;
 import jakarta.el.MethodInfo;
 
-public class StringMethodExpression extends MethodExpressionBase {
+public class LiteralMethodExpression extends MethodExpressionBase {
 
     private final String value;
 
-    public StringMethodExpression(String value) {
+    public LiteralMethodExpression(String value) {
         this.value = value;
     }
 
     @Override
-    public MethodInfo getMethodInfo(ELContext arg0) {
+    public MethodInfo getMethodInfo(ELContext context) {
         return null;
     }
 
@@ -29,12 +29,17 @@ public class StringMethodExpression extends MethodExpressionBase {
     }
 
     @Override
+    public boolean isLiteralText() {
+        return true;
+    }
+
+    @Override
     public boolean equals(Object obj) {
-        if (obj == null || obj.getClass() != StringMethodExpression.class) {
+        if (obj == null || obj.getClass() != LiteralMethodExpression.class) {
             return false;
         }
 
-        StringMethodExpression other = (StringMethodExpression) obj;
+        LiteralMethodExpression other = (LiteralMethodExpression) obj;
         return value.equals(other.value);
     }
 

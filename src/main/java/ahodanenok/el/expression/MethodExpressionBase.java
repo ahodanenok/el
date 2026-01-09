@@ -15,7 +15,6 @@ public abstract class MethodExpressionBase extends MethodExpression {
 
     @Override
     public boolean isLiteralText() {
-        // todo: impl
         return false;
     }
 }
