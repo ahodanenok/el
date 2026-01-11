@@ -54,7 +54,7 @@ public class Parser {
             return null;
         }
 
-        return new StringMethodExpression(literal);
+        return new LiteralMethodExpression(literal);
     }
 
     private MethodExpressionBase dollarMethod() {

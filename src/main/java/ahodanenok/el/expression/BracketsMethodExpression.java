@@ -46,17 +46,19 @@ class BracketsMethodExpression extends MethodExpressionBase {
         try {
             if (argExprs == null) {
                 Objects.requireNonNull(expectedParamTypes);
-                method = base.getClass().getDeclaredMethod(
-                    methodName,
-                    expectedParamTypes);
+                method = base.getClass().getDeclaredMethod(methodName, expectedParamTypes);
+            } else if (expectedParamTypes != null) {
+                method = base.getClass().getDeclaredMethod(methodName, expectedParamTypes);
             } else {
-                method = base.getClass().getDeclaredMethod(
-                    methodName,
-                    ExpressionUtils.collectArgTypes(
-                        ExpressionUtils.evaluateArgs(context, this.argExprs)));
+                method = MethodExpressionUtils.findMethod(
+                    base, methodName, ExpressionUtils.evaluateArgs(context, argExprs));
             }
         } catch (NoSuchMethodException e) {
             throw new MethodNotFoundException(methodName, e);
+        }
+
+        if (method == null) {
+            throw new MethodNotFoundException(methodName);
         }
 
         return new MethodInfo(methodName, method.getReturnType(), method.getParameterTypes());
