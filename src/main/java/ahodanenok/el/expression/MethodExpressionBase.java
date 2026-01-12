@@ -8,6 +8,10 @@ public abstract class MethodExpressionBase extends MethodExpression {
     Class<?> expectedReturnType;
     Class<?>[] expectedParamTypes;
 
+    public boolean isArgumentsProvided() {
+        return false;
+    }
+
     @Override
     public String getExpressionString() {
         return expressionString;

@@ -319,6 +319,11 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
         } catch (Exception e) {
             throw new ELException("Failed to parse method expression", e);
         }
+
+        if (!expr.isArgumentsProvided()) {
+            Objects.requireNonNull(expectedParamTypes);
+        }
+
         expr.expressionString = expression;
         expr.expectedReturnType = expectedReturnType;
         expr.expectedParamTypes = expectedParamTypes;

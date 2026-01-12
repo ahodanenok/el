@@ -30,6 +30,11 @@ class BracketsMethodExpression extends MethodExpressionBase {
     }
 
     @Override
+    public boolean isArgumentsProvided() {
+        return argExprs != null;
+    }
+
+    @Override
     public MethodInfo getMethodInfo(ELContext context) {
         Object base = baseExpr.getValue(context);
         if (base == null) {
