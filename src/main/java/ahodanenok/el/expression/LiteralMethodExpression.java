@@ -6,6 +6,8 @@ import jakarta.el.MethodInfo;
 
 public class LiteralMethodExpression extends MethodExpressionBase {
 
+    private static final Class<?>[] EMPTY_PARAMS = {};
+
     private final String value;
 
     public LiteralMethodExpression(String value) {
@@ -14,7 +16,11 @@ public class LiteralMethodExpression extends MethodExpressionBase {
 
     @Override
     public MethodInfo getMethodInfo(ELContext context) {
-        return null;
+        if (expectedReturnType == null) {
+            return new MethodInfo(value, String.class, EMPTY_PARAMS);
+        } else {
+            return new MethodInfo(value, expectedReturnType, EMPTY_PARAMS);
+        }
     }
 
     @Override
@@ -22,6 +28,7 @@ public class LiteralMethodExpression extends MethodExpressionBase {
         if (expectedReturnType == null) {
             return value;
         } else if (expectedReturnType == Void.class || expectedReturnType == void.class) {
+            // todo: move check to createMethodExpression?
             throw new ELException("Unexpected return value for type void");
         } else {
             return context.convertToType(value, expectedReturnType);
