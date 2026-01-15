@@ -1,11 +1,16 @@
 package ahodanenok.el.expression;
 
+import java.lang.annotation.Annotation;
+
 import jakarta.el.ELContext;
 import jakarta.el.ELException;
 import jakarta.el.MethodInfo;
+import jakarta.el.MethodReference;
 
 public class LiteralMethodExpression extends MethodExpressionBase {
 
+    private static final Class<?>[] EMPTY_PARAM_TYPES = {};
+    private static final Annotation[] EMPTY_ANNOTATIONS = {};
     private static final Class<?>[] EMPTY_PARAMS = {};
 
     private final String value;
@@ -17,10 +22,16 @@ public class LiteralMethodExpression extends MethodExpressionBase {
     @Override
     public MethodInfo getMethodInfo(ELContext context) {
         if (expectedReturnType == null) {
-            return new MethodInfo(value, String.class, EMPTY_PARAMS);
+            return new MethodInfo(value, String.class, EMPTY_PARAM_TYPES);
         } else {
-            return new MethodInfo(value, expectedReturnType, EMPTY_PARAMS);
+            return new MethodInfo(value, expectedReturnType, EMPTY_PARAM_TYPES);
         }
+    }
+
+    @Override
+    public MethodReference getMethodReference(ELContext context) {
+        return new MethodReference(
+            null, getMethodInfo(context), EMPTY_ANNOTATIONS, EMPTY_PARAMS);
     }
 
     @Override

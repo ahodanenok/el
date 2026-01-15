@@ -11,6 +11,7 @@ import jakarta.el.ELException;
 import jakarta.el.PropertyNotFoundException;
 import jakarta.el.MethodInfo;
 import jakarta.el.MethodNotFoundException;
+import jakarta.el.MethodReference;
 import jakarta.el.ValueExpression;
 import jakarta.el.ValueReference;
 
@@ -35,6 +36,26 @@ class BracketsMethodExpression extends MethodExpressionBase {
     }
 
     @Override
+    public MethodReference getMethodReference(ELContext context) {
+        Object base = baseExpr.getValue(context);
+        if (base == null) {
+            throw new PropertyNotFoundException("Trying to dereference null value");
+        }
+
+        Object methodNameValue = methodExpr.getValue(context);
+        if (methodNameValue == null) {
+            throw new PropertyNotFoundException("Trying to dereference null value");
+        }
+
+        Method method = findMethod(context, base, context.convertToType(methodNameValue, String.class));
+        return new MethodReference(
+            base,
+            new MethodInfo(method.getName(), method.getReturnType(), method.getParameterTypes()),
+            method.getDeclaredAnnotations(),
+            ExpressionUtils.evaluateArgs(context, argExprs));
+    }
+
+    @Override
     public MethodInfo getMethodInfo(ELContext context) {
         Object base = baseExpr.getValue(context);
         if (base == null) {
@@ -46,7 +67,11 @@ class BracketsMethodExpression extends MethodExpressionBase {
             throw new PropertyNotFoundException("Trying to dereference null value");
         }
 
-        String methodName = context.convertToType(methodNameValue, String.class);
+        Method method = findMethod(context, base, context.convertToType(methodNameValue, String.class));
+        return new MethodInfo(method.getName(), method.getReturnType(), method.getParameterTypes());
+    }
+
+    private Method findMethod(ELContext context, Object base, String methodName) {
         Method method;
         try {
             if (argExprs == null) {
@@ -66,7 +91,7 @@ class BracketsMethodExpression extends MethodExpressionBase {
             throw new MethodNotFoundException(methodName);
         }
 
-        return new MethodInfo(methodName, method.getReturnType(), method.getParameterTypes());
+        return method;
     }
 
     @Override

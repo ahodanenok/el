@@ -11,6 +11,7 @@ import jakarta.el.ELException;
 import jakarta.el.PropertyNotFoundException;
 import jakarta.el.MethodInfo;
 import jakarta.el.MethodNotFoundException;
+import jakarta.el.MethodReference;
 import jakarta.el.ValueExpression;
 import jakarta.el.ValueReference;
 
@@ -35,12 +36,32 @@ class DotMethodExpression extends MethodExpressionBase {
     }
 
     @Override
+    public MethodReference getMethodReference(ELContext context) {
+        Object base = baseExpr.getValue(context);
+        if (base == null) {
+            throw new PropertyNotFoundException("Trying to dereference null value");
+        }
+
+        Method method = findMethod(context, base);
+        return new MethodReference(
+            base,
+            new MethodInfo(method.getName(), method.getReturnType(), method.getParameterTypes()),
+            method.getDeclaredAnnotations(),
+            ExpressionUtils.evaluateArgs(context, argExprs));
+     }
+
+    @Override
     public MethodInfo getMethodInfo(ELContext context) {
         Object base = baseExpr.getValue(context);
         if (base == null) {
             throw new PropertyNotFoundException("Trying to dereference null value");
         }
 
+        Method method = findMethod(context, base);
+        return new MethodInfo(method.getName(), method.getReturnType(), method.getParameterTypes());
+    }
+
+    private Method findMethod(ELContext context, Object base) {
         Method method;
         try {
             if (argExprs == null) {
@@ -60,7 +81,7 @@ class DotMethodExpression extends MethodExpressionBase {
             throw new MethodNotFoundException(methodName);
         }
 
-        return new MethodInfo(methodName, method.getReturnType(), method.getParameterTypes());
+        return method;
     }
 
     @Override

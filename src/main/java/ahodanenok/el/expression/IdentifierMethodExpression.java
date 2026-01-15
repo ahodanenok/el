@@ -4,6 +4,7 @@ import jakarta.el.ELContext;
 import jakarta.el.ELException;
 import jakarta.el.MethodExpression;
 import jakarta.el.MethodInfo;
+import jakarta.el.MethodReference;
 
 class IdentifierMethodExpression extends MethodExpressionBase {
 
@@ -11,6 +12,16 @@ class IdentifierMethodExpression extends MethodExpressionBase {
 
     public IdentifierMethodExpression(IdentifierValueExpression idExpr) {
         this.idExpr = idExpr;
+    }
+
+    @Override
+    public MethodReference getMethodReference(ELContext context) {
+        Object value = idExpr.getValue(context);
+        if (value instanceof MethodExpression methodExpr) {
+            return methodExpr.getMethodReference(context);
+        } else {
+            throw new ELException("Identifier '%s' doesn't refer to a method".formatted(idExpr.name));
+        }
     }
 
     @Override
