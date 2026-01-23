@@ -8,6 +8,8 @@ import jakarta.el.ELContext;
 import jakarta.el.ELException;
 import jakarta.el.ValueExpression;
 
+import ahodanenok.el.Ops;
+
 class NegateValueExpression extends ValueExpressionBase {
 
     final ValueExpression expr;
@@ -27,7 +29,7 @@ class NegateValueExpression extends ValueExpressionBase {
         } else if (value instanceof BigInteger n) {
             return (T) n.negate();
         } else if (value instanceof String s) {
-            if (ExpressionUtils.looksLikeDouble(s)) {
+            if (Ops.looksLikeDouble(s)) {
                 return (T) Double.valueOf(-context.convertToType(s, Double.class).doubleValue());
             } else{
                 return (T) Long.valueOf(-context.convertToType(s, Long.class).longValue());

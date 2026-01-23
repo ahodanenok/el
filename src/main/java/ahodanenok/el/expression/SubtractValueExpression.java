@@ -8,6 +8,8 @@ import jakarta.el.ELContext;
 import jakarta.el.ELException;
 import jakarta.el.ValueExpression;
 
+import ahodanenok.el.Ops;
+
 class SubtractValueExpression extends ValueExpressionBase {
 
     final ValueExpression left;
@@ -40,10 +42,10 @@ class SubtractValueExpression extends ValueExpressionBase {
                 .subtract(context.convertToType(rightValue, BigDecimal.class));
         } else if (leftValue instanceof Float
                 || leftValue instanceof Double
-                || (leftValue instanceof String s && ExpressionUtils.looksLikeDouble(s))
+                || (leftValue instanceof String s && Ops.looksLikeDouble(s))
                 || rightValue instanceof Float
                 || rightValue instanceof Double
-                || (rightValue instanceof String s && ExpressionUtils.looksLikeDouble(s))) {
+                || (rightValue instanceof String s && Ops.looksLikeDouble(s))) {
             if (leftValue instanceof BigInteger || rightValue instanceof BigInteger) {
                 return (T) context.convertToType(leftValue, BigDecimal.class)
                     .subtract(context.convertToType(rightValue, BigDecimal.class));

@@ -6,18 +6,6 @@ import jakarta.el.ELContext;
 
 class ExpressionUtils {
 
-    static boolean looksLikeDouble(String str) {
-        char ch;
-        for (int i = 0; i < str.length(); i++) {
-            ch = str.charAt(i);
-            if (ch == '.' || ch == 'e' || ch == 'E') {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     static Object[] evaluateArgs(ELContext context, List<ValueExpressionBase> args) {
         Object[] values = new Object[args.size()];
         for (int i = 0; i < args.size(); i++) {

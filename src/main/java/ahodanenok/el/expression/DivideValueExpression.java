@@ -9,6 +9,8 @@ import jakarta.el.ELContext;
 import jakarta.el.ELException;
 import jakarta.el.ValueExpression;
 
+import ahodanenok.el.Ops;
+
 class DivideValueExpression extends ValueExpressionBase {
 
     final ValueExpression left;
@@ -32,21 +34,7 @@ class DivideValueExpression extends ValueExpressionBase {
 
     @SuppressWarnings("unchecked")
     private <T> T getValueInternal(ELContext context) {
-        Object leftValue = left.getValue(context);
-        Object rightValue = right.getValue(context);
-        if (leftValue == null && rightValue == null) {
-            return (T) Long.valueOf(0L);
-        } else if (leftValue instanceof BigDecimal
-                || leftValue instanceof BigInteger
-                || rightValue instanceof BigDecimal
-                || rightValue instanceof BigInteger) {
-            return (T) context.convertToType(leftValue, BigDecimal.class)
-                .divide(context.convertToType(rightValue, BigDecimal.class), RoundingMode.HALF_UP);
-        } else {
-            return (T) Double.valueOf(
-                context.convertToType(leftValue, Double.class)
-                / context.convertToType(rightValue, Double.class));
-        }
+        return (T) Ops.divide(context, left.getValue(context), right.getValue(context));
     }
 
     @Override

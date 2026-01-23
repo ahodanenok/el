@@ -8,6 +8,8 @@ import jakarta.el.ELContext;
 import jakarta.el.ELException;
 import jakarta.el.ValueExpression;
 
+import ahodanenok.el.Ops;
+
 class ModuloValueExpression extends ValueExpressionBase {
 
     final ValueExpression left;
@@ -38,11 +40,11 @@ class ModuloValueExpression extends ValueExpressionBase {
         } else if (leftValue instanceof BigDecimal
                 || leftValue instanceof Double
                 || leftValue instanceof Float
-                || (leftValue instanceof String s && ExpressionUtils.looksLikeDouble(s))
+                || (leftValue instanceof String s && Ops.looksLikeDouble(s))
                 || rightValue instanceof BigDecimal
                 || rightValue instanceof Double
                 || rightValue instanceof Float
-                || (rightValue instanceof String s && ExpressionUtils.looksLikeDouble(s))) {
+                || (rightValue instanceof String s && Ops.looksLikeDouble(s))) {
             return (T) Double.valueOf(
                 context.convertToType(leftValue, Double.class)
                 % context.convertToType(rightValue, Double.class));

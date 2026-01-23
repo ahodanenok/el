@@ -10,13 +10,16 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Objects;
 
-import ahodanenok.el.token.Tokenizer;
 import jakarta.el.ELContext;
 import jakarta.el.ELException;
 import jakarta.el.ExpressionFactory;
 import jakarta.el.LambdaExpression;
 import jakarta.el.MethodExpression;
+import jakarta.el.ELResolver;
 import jakarta.el.ValueExpression;
+
+import ahodanenok.el.StreamELResolver;
+import ahodanenok.el.token.Tokenizer;
 
 public class ExpressionFactoryImpl extends ExpressionFactory {
 
@@ -223,7 +226,23 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
             result = Proxy.newProxyInstance(
                 toType.getClassLoader(),
                 new Class[] { toType },
-                (p, m, args) -> lambda.invoke(args));
+                (p, m, args) -> {
+                    if (m.isDefault()) {
+                        return InvocationHandler.invokeDefault(p, m, args);
+                    }
+
+                    if (m.getReturnType() == void.class || m.getReturnType() == Void.class) {
+                        lambda.invoke(args);
+                        return null;
+                    } else {
+                        Object lambdaResult = lambda.invoke(args);
+                        if (lambdaResult != null) {
+                            lambdaResult = coerceToType(lambdaResult, m.getReturnType());
+                        }
+
+                        return lambdaResult;
+                    }
+                });
         }
         // 1.25.9. Coerce A to Any Other Type T
         else  {
@@ -358,5 +377,10 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
         expr.expectedType = expectedType;
 
         return expr;
+    }
+
+    @Override
+    public ELResolver getStreamELResolver() {
+        return new StreamELResolver();
     }
 }
