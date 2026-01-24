@@ -6,6 +6,7 @@ import static ahodanenok.el.token.TokenType.PAREN_LEFT;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import ahodanenok.el.token.LookaheadTokenizer;
 import ahodanenok.el.token.Token;
@@ -416,6 +417,48 @@ public class Parser {
                 }
                 expect(TokenType.SQUARE_RIGHT);
                 yield new ListValueExpression(expressions);
+            }
+            case CURLY_LEFT -> {
+                if (match(TokenType.CURLY_RIGHT)) {
+                     // todo: {} is a map or a set?
+                    yield new MapValueExpression(List.of());
+                }
+
+                List<ValueExpressionBase> setElements = null;
+                List<Map.Entry<ValueExpressionBase, ValueExpressionBase>> mapEntries = null;
+                ValueExpressionBase keyExpr = null;
+
+                keyExpr = expression();
+                if (peek(TokenType.COMMA)) {
+                    setElements = new ArrayList<>();
+                    setElements.add(keyExpr);
+                } else if (match(TokenType.COLON)) {
+                    mapEntries = new ArrayList<>();
+                    mapEntries.add(Map.entry(keyExpr, expression()));
+                } else {
+                    throw new IllegalStateException("Unexpected token: " + tokenizer.peek(1).getType()); // todo: exception
+                }
+
+                while (!match(TokenType.CURLY_RIGHT)) {
+                    expect(TokenType.COMMA);
+                    keyExpr = expression();
+                    if (setElements != null) {
+                        setElements.add(keyExpr);
+                    } else if (mapEntries != null) {
+                        expect(TokenType.COLON);
+                        mapEntries.add(Map.entry(keyExpr, expression()));
+                    } else {
+                        throw new IllegalStateException("Should not happen");
+                    }
+                }
+
+                if (setElements != null) {
+                    yield new SetValueExpression(setElements);
+                } else if (mapEntries != null) {
+                    yield new MapValueExpression(mapEntries);
+                }else {
+                    throw new IllegalStateException("Should not happen");
+                }
             }
             default -> throw new IllegalStateException("Unexpected token: " + token.getType()); // todo: exception
         };
